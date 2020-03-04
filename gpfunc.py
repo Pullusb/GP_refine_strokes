@@ -356,11 +356,23 @@ def gp_select_by_angle_reducted(tol, invert=False):
                 #calculate vector from current and next and store only "key" points:
 
 
-### straight by slice and slices getters for polygoonize
+### straight by slice and slices getters for polygonize
 
-def straight_stroke_slice(s, influence=100, slices=[]):
+def straight_stroke_slice(s, influence=100, slices=[], reduce=False, delete=False):
     if not slices:
         slices = [0, len(s.points)]
+
+    if delete:# remove points within slices range (influence is irelevant)
+        
+        if reduce and isinstance(slices[-1], list) and slices[-1][0]+1 < slices[-1][1]:
+            # with reduce on, delete mode often delete last point... substract last slice by one if possible and if reduce is passed
+            slices[-1][1] = slices[-1][1] - 1
+
+        for sl in reversed(slices):
+            # print(sl)
+            for pid in reversed(range(sl[0]+1,sl[1])):#sl[1]+1 ?
+                s.points.pop(index=pid)
+        return
 
     for sl in slices:
         s_id, e_id = sl[0], sl[1]
@@ -371,7 +383,7 @@ def straight_stroke_slice(s, influence=100, slices=[]):
 
         A = s.points[s_id].co
         B = s.points[e_id].co
-        ab_dist = vector_len_from_coord(A,B)
+        # ab_dist = vector_len_from_coord(A,B)
         full_dist = sum( [vector_len_from_coord(s.points[i],s.points[i+1]) for i in range(s_id, e_id)] )
         dist_from_start = 0.0
         coord_list = []
@@ -385,6 +397,8 @@ def straight_stroke_slice(s, influence=100, slices=[]):
         for count, i in enumerate(range(s_id+1, e_id)):#e_id
             #s.points[i].co = coord_list[i-1]#direct super straight 100%
             s.points[i].co = point_from_dist_in_segment_3d(s.points[i].co, coord_list[count], influence / 100)
+    
+                
 
 def get_points_id_by_reduced_angles(s, tol):
     #print(strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke))
@@ -443,7 +457,7 @@ def get_points_id_by_angles(s, tol, invert=False):
         if added > 1:
             return pairs
 
-def gp_polygonize(s, tol, influence=100, reduce=True):#, t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'
+def gp_polygonize(s, tol, influence=100, reduce=True, delete=False):#, t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'
     #print(strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke))
     if reduce:
         pairs = get_points_id_by_reduced_angles(s, tol)
@@ -452,7 +466,7 @@ def gp_polygonize(s, tol, influence=100, reduce=True):#, t_layer='ALL', t_frame=
     
     # print('pairs: ', pairs)
     if pairs:
-        straight_stroke_slice(s, influence, pairs)
+        straight_stroke_slice(s, influence, pairs, reduce=reduce, delete=delete)
 
 
 def guess_join(same_material=True, proximity_tolerance=0.01, start_point_tolerance=6):

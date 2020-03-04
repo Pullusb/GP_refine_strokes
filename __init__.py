@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 1, 0),
+"version": (0, 1, 2),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -56,9 +56,13 @@ class GPREFINE_OT_straighten_stroke(Operator):
     default=100, min=0, max=100, step=2, precision=1, subtype='PERCENTAGE', unit='NONE')#NONE
     
     def execute(self, context):
-        # pref = context.scene.gprsettings
-        # L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        to_straight_line(get_last_stroke(), keep_points=True, influence = self.influence_val)#, straight_pressure=True
+        pref = context.scene.gprsettings
+        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+        for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
+            to_straight_line(s, keep_points=True, influence = self.influence_val)#, straight_pressure=True
+
+        ## only on last stroke, maybe only in draw context !
+        # to_straight_line(get_last_stroke(), keep_points=True, influence = self.influence_val)#, straight_pressure=True
         return {"FINISHED"}
     
     def draw(self, context):
@@ -112,16 +116,23 @@ class GPREFINE_OT_polygonize(Operator):
     angle_tolerance : bpy.props.FloatProperty(name="Angle limit", description="Turn that have angle above this value (degree) will be considered as polygon corner", 
     default=40, min=0, max=179, step=2, precision=1, subtype='NONE', unit='NONE')#ANGLE
 
-    influence_val : bpy.props.FloatProperty(name="Poygonize force", description="Poygonize interpolation percentage", 
+    influence_val : bpy.props.FloatProperty(name="Polygonize force", description="Poygonize interpolation percentage", 
     default=100, min=0, max=100, step=2, precision=1, subtype='PERCENTAGE', unit='NONE')#NONE
 
     reduce : bpy.props.BoolProperty(name="Reduce", description="Reduce angle chunks to one points", 
+    default=False)
+
+    delete : bpy.props.BoolProperty(name="delete", description="Delete straigten points", 
     default=False)
     
     def execute(self, context):
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        gp_polygonize(get_last_stroke(), tol=self.angle_tolerance, influence=self.influence_val, reduce=self.reduce)
+        for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
+            gp_polygonize(s, tol=self.angle_tolerance, influence=self.influence_val, reduce=self.reduce, delete=self.delete)
+
+        ## only last stroke
+        # gp_polygonize(get_last_stroke(), tol=self.angle_tolerance, influence=self.influence_val, reduce=self.reduce)
         return {"FINISHED"}
     
     def draw(self, context):
@@ -129,6 +140,7 @@ class GPREFINE_OT_polygonize(Operator):
         layout.prop(self, "angle_tolerance")
         layout.prop(self, "influence_val")
         layout.prop(self, "reduce")
+        layout.prop(self, "delete")
 
     # def invoke(self, context, event):
         
@@ -183,7 +195,10 @@ class GPREFINE_OT_refine_ops(Operator):
             err = guess_join(same_material=True, proximity_tolerance=pref.proximity_tolerance, start_point_tolerance=pref.start_point_tolerance)
 
         if self.action == "STRAIGHT_LAST":
-            to_straight_line(get_last_stroke(), keep_points=False, straight_pressure=True)
+            ## last stroke (context ?)
+            # to_straight_line(get_last_stroke(), keep_points=False, straight_pressure=True)
+            for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
+                to_straight_line(s, keep_points=False, straight_pressure=True)
         
         # if self.action == "POLYGONIZE":
         #     gp_polygonize(pref.poly_angle_tolerance)
