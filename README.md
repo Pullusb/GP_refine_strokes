@@ -10,46 +10,79 @@ Blender addon - Bunch of functions for post-drawing strokes refine
 ---  
 
 ### Where ?
-Panel in sidebar : 3D view > sidebar 'N' > Gpencil > Strokes refine
+Panel in sidebar : 3D view > sidebar 'N' > Gpencil > Strokes refine (need to be in a GP mode to appear)
 
 ## Description
 
-Various tools to affect strokes. use F9 key to use the _redo_ options when available.  
-The important things is that most of the tool act according to the scope filter you define on top.  
-This is based on three level : Layer > Frame > Stroke. be carefull with the tool target
-Also note that a few tools do not use the filter and works only on the last stroke (mosltly)
+Various tools to affect strokes. Use F9 key to use the _redo_ options when available.  
+  
+The important things is that most of the tool act according to the  filter you define on top:  
 
-Tools description:  
+![target_filter](https://github.com/Pullusb/images_repo/raw/master/GPR_strokes_target_filter.png)
 
-**straighten**
+This is based on three level : Layer > Frame > Stroke. Be carefull with the targets.  
+Also note that a few tools do not use the filter and works directly on the last stroke (mostly).
+
+### Stroke refine
+
+**Trim start/end**  (only work on last stroke)  
+each call erase starting/ending point. usefull to adjust when stroke has gone too far  
+![Stroke trim](https://github.com/Pullusb/images_repo/raw/master/GPR_trim.gif)
+  
+**Auto join** (only on last stroke, /!\ experimental, need refining)  
+Merge the start of last stroke with nearest stroke tail found  
+head cutter tolerance : number (as points) from stroke boundary that are evaluated for the lines merge  
+Detection radius : Proximity tolerance to detect surrounding strokes boundarys, relative to screen space, increase if no result  
+![auto join](https://github.com/Pullusb/images_repo/raw/master/GPR_autojoin_oval.gif)
+  
+**straighten**  
 Two buttons  
 one keep only forst and last point so in-between point information like thickness are lost  
 The other straighten keep the point and you can affect influence.
-
 ![straighten](https://github.com/Pullusb/images_repo/raw/master/GPR_straight_influence.gif)
+  
+**select by angle** : F9 to access angle tolerance tweaking
+![angle based selection](https://github.com/Pullusb/images_repo/raw/master/GPR_select_by_angle.gif)
 
 
 **polygonize**  
 Like the straighten above but by splitting on angles between point, user can manage angle tolerance.  
-
-![polygonize](https://github.com/Pullusb/images_repo/raw/master/GPR_polygonise.gif)
-
-
-
-Filter management can be tricky sometimes (will work on that)
-
-for examples:
-Layer: Active, Frame: Active, stroke: Selected -> You can select strokes that are on different layer, but here your restricted to 'active layer'  
+![polygonize](https://github.com/Pullusb/images_repo/raw/master/GPR_polygonise.gif)  
   
-Layer: All, Frame: Active, stroke: Last -> Here last stroke is not necessarily the one on the active layer (since All layer are targeted)
 
 
-Need to document other ops...
+### Thickness and opacity
+
+Modify the points attributes _pressure_ or _strength_ for targeted strokes (uses filter)  
+Can either set it or add/substract by some amount
+![point attribute](https://github.com/Pullusb/images_repo/raw/master/GPR_set-pressure-strength.gif)  
+
+  
+### Thin stroke tips
+
+**refine stroke** by progressively fade pressure from middle to tip.  
+/!\ Works but kind of broken as for now, percentage is not accurate, can raise errors.
+![thin tips](https://github.com/Pullusb/images_repo/raw/master/GPR_thinner_tips.gif)  
+
+
+### Infos
+
+Print points infos: Display list of points pressure in console (according to filter)
+
+### Further notes
+
+
+Filter management can be tricky sometimes (Need a rework to simplify common operation)  
+Examples:  
+Layer: _Active_, Frame: _Active_, stroke: _Selected_ -> You can select strokes that are on different layer, but here your restricted to 'active layer'. 
+    
+Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessarily the one on the active layer (since _All_ layer are targeted)
 
 ---
 
 
 ## Todo:
+- +/- button values strength need fix
 - add preset that override filter to work on last stroke or selection. Full filter is sometimes too tricky...
 - auto-join pressure : make a fade in pressure from chosen old points to new points
 - auto-join subdiv : add an intermediate point to avoid a "break" in the line when the auto join
