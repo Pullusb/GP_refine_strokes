@@ -283,7 +283,7 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
         row.operator('gp.refine_strokes', text='+').action = 'ADD_STRENGTH'# Add strength
 
 class GPREFINE_PT_last_stroke_refine(GPR_refine, Panel):
-    bl_label = "Last stroke refine"#"Strokes filters"
+    bl_label = "Stroke refine"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
     # bl_options = {'DEFAULT_CLOSED'}
 
@@ -325,7 +325,7 @@ class GPREFINE_PT_infos_print(GPR_refine, Panel):
 
 class GPR_refine_prop(PropertyGroup):
     ## Filters properties
-    layer_tgt : EnumProperty(name="Layer target", description="Layer to access", default='ALL',
+    layer_tgt : EnumProperty(name="Layer target", description="Layer to access", default='ALL',#SELECT -- ALL allow selection to be okay but kind of conflict with last ...
     items=(
         ('ALL', 'All accessible', 'All layer except hided or locked ones', 0),   
         ('SELECT', 'Selected', 'Only active if selected from layer list, multiple layer can be selected in dopesheet', 1),
@@ -343,7 +343,7 @@ class GPR_refine_prop(PropertyGroup):
         )
     )
 
-    stroke_tgt : EnumProperty(name="Stroke target", description="Stroke to access", default='SELECT',
+    stroke_tgt : EnumProperty(name="Stroke target", description="Stroke to access", default='SELECT',#LAST dont work well with ALL layer...
     items=(
         ('SELECT', 'Selected', 'Only selected strokes (if at least one point is selected on the stroke it counts as selected)', 0),   
         ('ALL', 'All', 'All Strokes of given layer and frame', 1),   

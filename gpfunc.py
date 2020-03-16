@@ -69,6 +69,8 @@ def strokelist(t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
     Quickly return a strokelist according to given filters
     By default - All accessible on viewport : visible and unlocked
     '''
+    ## TODO: when stroke is LAST and layer is ALL it can be the last of all layers, priority must be set to acive layer.
+
     return [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
 
 def get_last_stroke():

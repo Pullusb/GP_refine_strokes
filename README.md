@@ -35,12 +35,22 @@ Like the straighten above but by splitting on angles between point, user can man
 ![polygonize](https://github.com/Pullusb/images_repo/raw/master/GPR_polygonise.gif)
 
 
-doc wip...
+
+Filter management can be tricky sometimes (will work on that)
+
+for examples:
+Layer: Active, Frame: Active, stroke: Selected -> You can select strokes that are on different layer, but here your restricted to 'active layer'  
+  
+Layer: All, Frame: Active, stroke: Last -> Here last stroke is not necessarily the one on the active layer (since All layer are targeted)
+
+
+Need to document other ops...
 
 ---
 
 
 ## Todo:
+- add preset that override filter to work on last stroke or selection. Full filter is sometimes too tricky...
 - auto-join pressure : make a fade in pressure from chosen old points to new points
 - auto-join subdiv : add an intermediate point to avoid a "break" in the line when the auto join
 - feature Context actions : Override scope, default action can affect must affect selection if context mode is edit_stroke (as and option ?)
