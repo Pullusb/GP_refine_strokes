@@ -3,14 +3,39 @@ Blender addon - Bunch of functions for post-drawing strokes refine
 
 **[Download latest](https://github.com/Pullusb/GP_refine_strokes/archive/master.zip)**
 
-<!-- ### [Demo Youtube](https://youtu.be/Rs4y7DeHkp8) -->
+<!-- ### [Demo Youtube]() -->
+
+### /!\ WIP : some features are still experimental
 
 ---  
 
-## Description
-
 ### Where ?
 Panel in sidebar : 3D view > sidebar 'N' > Gpencil > Strokes refine
+
+## Description
+
+Various tools to affect strokes. use F9 key to use the _redo_ options when available.  
+The important things is that most of the tool act according to the scope filter you define on top.  
+This is based on three level : Layer > Frame > Stroke. be carefull with the tool target
+Also note that a few tools do not use the filter and works only on the last stroke (mosltly)
+
+Tools description:  
+
+**straighten**
+Two buttons  
+one keep only forst and last point so in-between point information like thickness are lost  
+The other straighten keep the point and you can affect influence.
+
+![straighten](https://github.com/Pullusb/images_repo/raw/master/GPR_straight_influence.gif)
+
+
+**polygonize**  
+Like the straighten above but by splitting on angles between point, user can manage angle tolerance.  
+
+![polygonize](https://github.com/Pullusb/images_repo/raw/master/GPR_polygonise.gif)
+
+
+doc wip...
 
 ---
 
