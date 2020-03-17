@@ -37,8 +37,8 @@ Detection radius : Proximity tolerance to detect surrounding strokes boundarys, 
   
 **straighten**  
 Two buttons  
-one keep only forst and last point so in-between point information like thickness are lost  
-The other straighten keep the point and you can affect influence.
+One keep only first and last point so in-between point information like thickness are lost  
+The other straighten the point and you can affect influence.
 ![straighten](https://github.com/Pullusb/images_repo/raw/master/GPR_straight_influence.gif)
   
 **select by angle** : F9 to access angle tolerance tweaking
@@ -84,16 +84,12 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 ## Todo:
 - +/- button values strength need fix
 - add preset that override filter to work on last stroke or selection. Full filter is sometimes too tricky...
+- feature Context actions : Override scope, default action can affect must affect selection if context mode is edit_stroke (as and option ?)
 - auto-join pressure : make a fade in pressure from chosen old points to new points
 - auto-join subdiv : add an intermediate point to avoid a "break" in the line when the auto join
-- feature Context actions : Override scope, default action can affect must affect selection if context mode is edit_stroke (as and option ?)
-- feature action preference : make an addon preferences to change
-- make gifs demos
+- feature action preference : make an addon preferences to change default options.
 
-
-### Ideas considered :
-- Per-layer pseudo color : find a way to "remember" layer with custom color or bypass them (when on AND off)
-
+<!-- ### Ideas considered : -->
 
 ---
 
