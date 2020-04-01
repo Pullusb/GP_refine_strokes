@@ -94,6 +94,8 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 ---
 
 ## Changelog:
+  2020-04-01 v0.1.3 - :
+  - addon auto updater in prefs
   2020-03-04 v0.1.2 - :
   - fix set/add stroke
   - added substract stroke option
