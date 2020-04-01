@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 1, 2),
+"version": (0, 1, 3),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -18,6 +18,7 @@ import re, fnmatch, glob
 from mathutils import Vector, Matrix
 from math import radians, degrees
 
+from . import addon_updater_ops# updater
 
 ## addon basic import shortcuts for class types and props
 from bpy.props import (IntProperty,
@@ -231,6 +232,7 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True#send properties to the right side
+
         # flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
         layout.prop(context.scene.gprsettings, 'layer_tgt')
         layout.prop(context.scene.gprsettings, 'frame_tgt')
@@ -308,7 +310,9 @@ class GPREFINE_PT_last_stroke_refine(GPR_refine, Panel):
         # row.operator('gp.refine_strokes', text='Polygonize', icon='IPO_CONSTANT').action = 'POLYGONIZE'#generic polygonize
         
         # straigthten line should be a separate operator with influence value... (fully straight lines are boring)
-    
+        addon_updater_ops.check_for_update_background()# updater
+        addon_updater_ops.update_notice_box_ui(self, context)# updater
+
 
 class GPREFINE_PT_infos_print(GPR_refine, Panel):
     bl_label = "Infos"#"Strokes filters"
@@ -401,9 +405,53 @@ class GPR_refine_prop(PropertyGroup):
     poly_angle_tolerance : FloatProperty(name="Angle tolerance", description="Point with corner above this angle will be used as corners", 
     default=45, min=1, max=179, soft_min=5, soft_max=0.1, step=1, precision=1)
 
+
+## updater
+class GPR_addonprefs(bpy.types.AddonPreferences):
+    bl_idname = __name__
+    
+    auto_check_update : bpy.props.BoolProperty(
+    name="Auto-check for Update",
+    description="If enabled, auto-check for updates using an interval",
+    default=False,
+    )
+
+    updater_intrval_months : bpy.props.IntProperty(
+        name='Months',
+        description="Number of months between checking for updates",
+        default=0,
+        min=0
+        )
+    updater_intrval_days : bpy.props.IntProperty(
+        name='Days',
+        description="Number of days between checking for updates",
+        default=7,
+        min=0,
+        max=31
+        )
+    updater_intrval_hours : bpy.props.IntProperty(
+        name='Hours',
+        description="Number of hours between checking for updates",
+        default=0,
+        min=0,
+        max=23
+        )
+    updater_intrval_minutes : bpy.props.IntProperty(
+        name='Minutes',
+        description="Number of minutes between checking for updates",
+        default=0,
+        min=0,
+        max=59
+        )
+
+    def draw(self, context):
+        layout = self.layout
+        addon_updater_ops.update_settings_ui(self, context)
+
 ### --- REGISTER ---
 
 classes = (
+GPR_addonprefs,# updater
 GPR_refine_prop,
 GPREFINE_OT_refine_ops,
 GPREFINE_OT_straighten_stroke,
@@ -418,12 +466,14 @@ GPREFINE_PT_infos_print,
 
 
 def register():
+    addon_updater_ops.register(bl_info)# updater
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
     bpy.types.Scene.gprsettings = PointerProperty(type = GPR_refine_prop)
 
 def unregister():
+    addon_updater_ops.unregister()# updater
     del bpy.types.Scene.gprsettings
     from bpy.utils import unregister_class
     for cls in reversed(classes):
