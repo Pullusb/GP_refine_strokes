@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 1, 3),
+"version": (0, 1, 4),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -165,6 +165,15 @@ class GPREFINE_OT_refine_ops(Operator):
             thin_stroke_tips_percentage(tip_len=pref.percentage_tip_len, variance=pref.percentage_tip_len_random, t_layer=L, t_frame=F, t_stroke=S)
         
         ## -- pressure and strength action
+        if self.action == "ADD_LINE_WIDTH":
+            gp_add_line_width(amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+        
+        if self.action == "SUB_LINE_WIDTH":
+            gp_add_line_width(amount= -pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+
+        if self.action == "SET_LINE_WIDTH":
+            gp_set_line_width(amount=pref.set_line_width, t_layer=L, t_frame=F, t_stroke=S) 
+
         if self.action == "ADD_PRESSURE":
             gp_add_pressure(amount=pref.add_pressure, t_layer=L, t_frame=F, t_stroke=S)
         
@@ -269,20 +278,33 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        
+        row = layout.row()
+        row.prop(context.scene.gprsettings, 'add_line_width')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_WIDTH'# Sub line_width
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_WIDTH'# Add line_width
+
+        row = layout.row()
+        row.prop(context.scene.gprsettings, 'set_line_width')
+        row.operator('gp.refine_strokes', text='Set line width').action = 'SET_LINE_WIDTH'
+
         row = layout.row()
         row.prop(context.scene.gprsettings, 'add_pressure')
         row.operator('gp.refine_strokes', text='-').action = 'SUB_PRESSURE'# Sub pressure
         row.operator('gp.refine_strokes', text='+').action = 'ADD_PRESSURE'# Add pressure
+        
         row = layout.row()
         row.prop(context.scene.gprsettings, 'set_pressure')
         row.operator('gp.refine_strokes', text='Set pressure').action = 'SET_PRESSURE'#, icon='GREASEPENCIL'
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'set_strength')
-        row.operator('gp.refine_strokes', text='Set strength').action = 'SET_STRENGTH'#, icon='GREASEPENCIL'
+        
         row = layout.row()
         row.prop(context.scene.gprsettings, 'add_strength')
         row.operator('gp.refine_strokes', text='-').action = 'SUB_STRENGTH'# Sub strength
         row.operator('gp.refine_strokes', text='+').action = 'ADD_STRENGTH'# Add strength
+        
+        row = layout.row()
+        row.prop(context.scene.gprsettings, 'set_strength')
+        row.operator('gp.refine_strokes', text='Set strength').action = 'SET_STRENGTH'#, icon='GREASEPENCIL'
 
 class GPREFINE_PT_last_stroke_refine(GPR_refine, Panel):
     bl_label = "Stroke refine"#"Strokes filters"
@@ -329,7 +351,11 @@ class GPREFINE_PT_infos_print(GPR_refine, Panel):
 
 class GPR_refine_prop(PropertyGroup):
     ## Filters properties
-    layer_tgt : EnumProperty(name="Layer target", description="Layer to access", default='ALL',#SELECT -- ALL allow selection to be okay but kind of conflict with last ...
+
+    #[‘HIDDEN’, ‘SKIP_SAVE’, ‘ANIMATABLE’, ‘LIBRARY_EDITABLE’, ‘PROPORTIONAL’,’TEXTEDIT_UPDATE’]
+    #Bool_variable_name : bpy.props.BoolProperty(name="", description="", default=False, subtype='NONE', options={'ANIMATABLE'}, update=None, get=None, set=None)
+
+    layer_tgt : EnumProperty(name="Layer target", description="Layer to access", default='ALL', options={'HIDDEN'},#SELECT -- ALL allow selection to be okay but kind of conflict with last ...
     items=(
         ('ALL', 'All accessible', 'All layer except hided or locked ones', 0),   
         ('SELECT', 'Selected', 'Only active if selected from layer list, multiple layer can be selected in dopesheet', 1),
@@ -339,7 +365,7 @@ class GPR_refine_prop(PropertyGroup):
         )
     )
 
-    frame_tgt : EnumProperty(name="Frame target", description="Frames to access", default='ACTIVE',
+    frame_tgt : EnumProperty(name="Frame target", description="Frames to access", default='ACTIVE', options={'HIDDEN'},
     items=(
         ('ACTIVE', 'Active', 'Only active (visible) frame', 0),   
         ('ALL', 'All', 'All frames', 1),   
@@ -347,7 +373,7 @@ class GPR_refine_prop(PropertyGroup):
         )
     )
 
-    stroke_tgt : EnumProperty(name="Stroke target", description="Stroke to access", default='SELECT',#LAST dont work well with ALL layer...
+    stroke_tgt : EnumProperty(name="Stroke target", description="Stroke to access", default='SELECT', options={'HIDDEN'},#LAST dont work well with ALL layer...
     items=(
         ('SELECT', 'Selected', 'Only selected strokes (if at least one point is selected on the stroke it counts as selected)', 0),   
         ('ALL', 'All', 'All Strokes of given layer and frame', 1),   
@@ -357,52 +383,60 @@ class GPR_refine_prop(PropertyGroup):
 
     ## Tip thinner
 
-    percentage_use_sync_tip_len : BoolProperty(name="Sync tip fade", 
+    percentage_use_sync_tip_len : BoolProperty(name="Sync tip fade", options={'HIDDEN'},
     description="Same tip fade start and end percentage", 
     default=True)
 
-    percentage_tip_len :  IntProperty(name="Tip fade lenght", 
+    percentage_tip_len :  IntProperty(name="Tip fade lenght", options={'HIDDEN'}, 
     description="Set the tip fade lenght as a percentage of the strokes points", default=20, min=5, max=100, step=1, subtype='PERCENTAGE')
     
-    percentage_tip_len_random :  IntProperty(name="Random", 
+    percentage_tip_len_random :  IntProperty(name="Random", options={'HIDDEN'}, 
     description="Randomize the percentage by this amount around given value\n carefull, with variance each time you relaunch this you alterate the lines", default=0, min=0, max=50, soft_max=25, step=1, subtype='PERCENTAGE')
 
-    percentage_start_tip_len : IntProperty(name="Start tip fade lenght", 
+    percentage_start_tip_len : IntProperty(name="Start tip fade lenght", options={'HIDDEN'}, 
     description="Set the start tip fade lenght as a percentage of the strokes points", default=20, min=5, max=100, step=1, subtype='PERCENTAGE')
     
-    percentage_end_tip_len : IntProperty(name="End tip fade lenght", 
+    percentage_end_tip_len : IntProperty(name="End tip fade lenght", options={'HIDDEN'}, 
     description="Set the end tip fade lenght as a percentage of the strokes points", default=20, min=5, max=100, step=1, subtype='PERCENTAGE')
     
-    force_max_pressure_line_body : BoolProperty(name="Force max pressure on line body", 
+    force_max_pressure_line_body : BoolProperty(name="Force max pressure on line body", options={'HIDDEN'}, 
     description="One the parts that are not fading, put all points pressure to the level of the maximum on the line, fade from this value on tips", 
     default=False)
 
-    ## pressure and strengh handling
+    ## width pressure and strength
 
-    set_pressure : FloatProperty(name="Pressure", description="Points pressure to set (thickness)", 
+    # width (brush radius)
+    set_line_width : IntProperty(name="line width", description="Line width to set (correspond to brush radius, pixel value)", options={'HIDDEN'}, 
+    default=10, min=0, max=500, soft_min=0, soft_max=150)
+
+    add_line_width : IntProperty(name="line width", description="Line width radius to add (correspond to brush radius, pixel value)", options={'HIDDEN'}, 
+    default=1, min=0, max=300, soft_min=0, soft_max=100)
+
+    # pressure (pen pressure)
+    set_pressure : FloatProperty(name="Pressure", description="Points pressure to set (thickness)", options={'HIDDEN'}, 
     default=1.0, min=0, max=5.0, soft_min=0, soft_max=2.0, step=3, precision=2)
     
-    add_pressure : FloatProperty(name="Pressure", description="Points pressure to add (thickness)", 
-    default=0.02, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
+    add_pressure : FloatProperty(name="Pressure", description="Points pressure to add (thickness)", options={'HIDDEN'}, 
+    default=0.1, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
     
-    set_strength : FloatProperty(name="Strength", description="Points strength to set (opacity)", 
+    set_strength : FloatProperty(name="Strength", description="Points strength to set (opacity)", options={'HIDDEN'}, 
     default=1.0, min=0, max=5.0, soft_min=0, soft_max=2.0, step=3, precision=2)
 
-    add_strength : FloatProperty(name="Strength", description="Points strength to add (opacity)", 
-    default=0.02, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
+    add_strength : FloatProperty(name="Strength", description="Points strength to add (opacity)", options={'HIDDEN'}, 
+    default=0.1, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
     
     # auto join
     
-    proximity_tolerance : FloatProperty(name="Detection radius", description="Proximity tolerance (Relative to view), number of point detected in range printed in console", 
+    proximity_tolerance : FloatProperty(name="Detection radius", description="Proximity tolerance (Relative to view), number of point detected in range printed in console", options={'HIDDEN'}, 
     default=0.01, min=0.00001, max=0.1, soft_min=0.0001, soft_max=0.1, step=3, precision=3)
 
-    start_point_tolerance :  IntProperty(name="Head cutter tolerance", 
+    start_point_tolerance :  IntProperty(name="Head cutter tolerance", options={'HIDDEN'}, 
     description="Define number of grease pencil point at the start of the last stroke that can be chosen\n0 means only the first point of the stroke is evaluated and the new line will not be cutted",
     default=6, min=0, max=25, soft_max=8, step=1,)
 
     # polygonize
 
-    poly_angle_tolerance : FloatProperty(name="Angle tolerance", description="Point with corner above this angle will be used as corners", 
+    poly_angle_tolerance : FloatProperty(name="Angle tolerance", description="Point with corner above this angle will be used as corners", options={'HIDDEN'}, 
     default=45, min=1, max=179, soft_min=5, soft_max=0.1, step=1, precision=1)
 
 

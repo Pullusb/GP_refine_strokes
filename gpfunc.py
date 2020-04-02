@@ -17,19 +17,22 @@ def get_layers(target='SELECT'):
     if not bpy.context.object.type == 'GPENCIL': return []
     if not bpy.context.object.data.layers.active: return []
     
-    if not target or target == 'SELECT':#iterable with all selected layer (dopesheet)
-        return [l for l in bpy.context.object.data.layers if l.select and not l.hide and not l.lock]
+    if not target or target == 'SELECT':# iterable with all selected layer (dopesheet)
+        # return [l for l in bpy.context.object.data.layers if l.select and not l.hide and not l.lock]
+        ## seems it can sometimes bug when there is an active that is not selected (should be selected) 
+        return [l for l in bpy.context.object.data.layers if l ==  bpy.context.object.data.layers.active and not l.hide and not l.lock or l.select and not l.hide and not l.lock]
 
-    elif target == 'ACTIVE':#iterable with only active layer
+    elif target == 'ACTIVE':# iterable with only active layer
         return [bpy.context.object.data.layers.active]
 
-    elif target == 'ALL': #all visible and unlocked layers iterable
+    elif target == 'ALL': # all visible and unlocked layers iterable
         return [l for l in bpy.context.object.data.layers if not l.hide and not l.lock]
 
-    elif target == 'SIDE_SELECT':#iterable with all selected layer except active
+    elif target == 'SIDE_SELECT':# iterable with all selected layer except active
         if bpy.context.object.data.layers.active and len([l for l in bpy.context.object.data.layers if l.select and not l.hide and not l.lock]) > 1:
             return [l for l in bpy.context.object.data.layers if l.select and not l.hide and not l.lock and l != bpy.context.object.data.layers.active]
-    elif target == 'UNRESTRICTED': #all layers iterable
+    
+    elif target == 'UNRESTRICTED': # all layers iterable (everything)
         return bpy.context.object.data.layers
 
     return []
@@ -41,12 +44,16 @@ def get_frames(layer, target='ACTIVE'):
     Return empty list if nothing found
     '''
     if not layer.active_frame:return []
+
     if not target or target == 'ACTIVE':#iterable with active frame
         return  [layer.active_frame]
+    
     elif target == 'ALL':#iterable of all frames in layer
         return layer.frames
+    
     elif target == 'SELECT':#iterable of all selected frames in layer
         return [f for f in layer.frames if f.select]
+
     return []
 
 def get_strokes(frame, target='SELECT'):
@@ -56,12 +63,16 @@ def get_strokes(frame, target='SELECT'):
     Return empty list if nothing found
     '''
     if not len(frame.strokes):return []
+    
     if not target or target == 'SELECT':
         return  [s for s in frame.strokes if s.select]
+    
     elif target == 'ALL':
         return frame.strokes
+    
     elif target == 'LAST':
         return [frame.strokes[-1]]
+    
     return []  
 
 def strokelist(t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
@@ -69,7 +80,7 @@ def strokelist(t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
     Quickly return a strokelist according to given filters
     By default - All accessible on viewport : visible and unlocked
     '''
-    ## TODO: when stroke is LAST and layer is ALL it can be the last of all layers, priority must be set to acive layer.
+    ## TODO: when stroke is LAST and layer is ALL it can be the last of all layers, priority must be set to active layer.
 
     return [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
 
@@ -89,6 +100,15 @@ def selected_strokes():
 
 ## -- overall pressure and strength
 
+
+def gp_add_line_width(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.line_width += amount
+
+def gp_set_line_width(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.line_width = amount
+
 def gp_add_pressure(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         for p in s.points:
@@ -96,6 +116,7 @@ def gp_add_pressure(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT
 
 def gp_set_pressure(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        #TODO use a foreach_set on points for speed
         for p in s.points:
             p.pressure = amount
 
@@ -106,6 +127,7 @@ def gp_add_strength(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT
 
 def gp_set_strength(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        #TODO use a foreach_set on points for speed
         for p in s.points:
             p.strength = amount
 
