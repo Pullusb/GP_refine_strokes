@@ -94,6 +94,9 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 ---
 
 ## Changelog:
+  2020-04-06 v0.1.5:
+  - Critical: Fix mistake in layer selection filter when retrieving stroke list to affect.
+
   2020-04-02 v0.1.4:
   - make props non animatable (used options={'HIDDEN'} value)
   - tweaked layer select mode to prevent potential error

@@ -6,4 +6,4 @@ __pycache__/operators.cpython-37.pyc
 __pycache__/converter.cpython-37.pyc
 *.pyc
 gp_refine_strokes_updater
-*.json
+gp_refine_strokes_updater/GP_refine_strokes_updater_status.json

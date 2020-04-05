@@ -81,8 +81,22 @@ def strokelist(t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
     By default - All accessible on viewport : visible and unlocked
     '''
     ## TODO: when stroke is LAST and layer is ALL it can be the last of all layers, priority must be set to active layer.
+    
+    # superBAD: (not flattened) : [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
 
-    return [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
+    # itertool not tested enough, flatenned twice like this need speed tests...
+    """ import itertools# un-nesting triple comprehension list
+    turbolist = [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)]
+    flattened = list(itertools.chain.from_iterable(turbolist))
+    all_strokes = list(itertools.chain.from_iterable(flattened)) """
+
+    all_strokes = []
+    for l in get_layers(target=t_layer):
+        for f in get_frames(l, target=t_frame):
+            for s in get_strokes(f, target=t_stroke):
+                all_strokes.append(s)
+
+    return all_strokes
 
 def get_last_stroke():
     return bpy.context.object.data.layers.active.active_frame.strokes[-1]
