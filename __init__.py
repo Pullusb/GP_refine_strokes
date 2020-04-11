@@ -2,11 +2,11 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 1, 5),
+"version": (0, 1, 6),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
-"warning": "",
-"wiki_url": "",
+"warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
+"doc_url": "https://github.com/Pullusb/GP_refine_strokes",
 "category": "3D View"
 }
 
@@ -43,6 +43,7 @@ from bpy.types import (Operator,
 
 from .utils import *
 from .gpfunc import *
+from .import gp_keymaps
 
 ### -- OPERATOR --
 
@@ -253,7 +254,7 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
 class GPREFINE_PT_thin_tips(GPR_refine, Panel):
     bl_label = "Thin stroke tips"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -273,7 +274,7 @@ class GPREFINE_PT_thin_tips(GPR_refine, Panel):
 class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
     bl_label = "Thickness and opacity"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    bl_options = {'DEFAULT_CLOSED'}
+    # bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -318,10 +319,6 @@ class GPREFINE_PT_last_stroke_refine(GPR_refine, Panel):
         row.operator('gp.refine_strokes', text='Trim start', icon='TRACKING_CLEAR_FORWARDS').action = 'TRIM_START'
         row.operator('gp.refine_strokes', text='Trim end', icon='TRACKING_CLEAR_BACKWARDS').action = 'TRIM_END'
         layout.separator()
-        layout = self.layout
-        layout.prop(context.scene.gprsettings, 'start_point_tolerance')
-        layout.prop(context.scene.gprsettings, 'proximity_tolerance')
-        layout.operator('gp.refine_strokes', text='Auto join', icon='CON_TRACKTO').action = 'GUESS_JOIN'
         
         row = layout.row()
         row.operator('gp.straighten_stroke', text='Straighten', icon='CURVE_PATH')
@@ -331,6 +328,14 @@ class GPREFINE_PT_last_stroke_refine(GPR_refine, Panel):
         row.operator('gp.polygonize_stroke', icon='LINCURVE')
         # row.operator('gp.refine_strokes', text='Polygonize', icon='IPO_CONSTANT').action = 'POLYGONIZE'#generic polygonize
         
+        layout.separator()
+        ## experimental Auto join will come back when fixed
+        layout = self.layout
+        # layout.label(text='Stroke join')
+        layout.prop(context.scene.gprsettings, 'start_point_tolerance')
+        layout.prop(context.scene.gprsettings, 'proximity_tolerance')
+        layout.operator('gp.refine_strokes', text='Auto join', icon='CON_TRACKTO').action = 'GUESS_JOIN'
+
         # straigthten line should be a separate operator with influence value... (fully straight lines are boring)
         addon_updater_ops.check_for_update_background()# updater
         addon_updater_ops.update_notice_box_ui(self, context)# updater
@@ -495,7 +500,8 @@ GPREFINE_PT_stroke_refine_panel,#main panel
 GPREFINE_PT_last_stroke_refine,
 GPREFINE_PT_thickness_opacity,
 GPREFINE_PT_thin_tips,
-GPREFINE_PT_infos_print,
+# GPREFINE_PT_infos_print,
+gp_keymaps.GPREFINE_OT_delete_last_stroke,
 )
 
 
@@ -504,11 +510,13 @@ def register():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
+    gp_keymaps.register()#keymaps
     bpy.types.Scene.gprsettings = PointerProperty(type = GPR_refine_prop)
 
 def unregister():
     addon_updater_ops.unregister()# updater
     del bpy.types.Scene.gprsettings
+    gp_keymaps.unregister()#keymaps
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)

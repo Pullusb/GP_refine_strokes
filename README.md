@@ -12,6 +12,8 @@ Blender addon - Bunch of functions for post-drawing strokes refine
 ### Where ?
 Panel in sidebar : 3D view > sidebar 'N' > Gpencil > Strokes refine (need to be in a GP mode to appear)
 
+
+
 ## Description
 
 Various tools to affect strokes. Use F9 key to use the _redo_ options when available.  
@@ -69,6 +71,8 @@ Can either set it or add/substract by some amount
 
 Print points infos: Display list of points pressure in console (according to filter)
 
+
+
 ### Further notes
 
 
@@ -77,6 +81,10 @@ Examples:
 Layer: _Active_, Frame: _Active_, stroke: _Selected_ -> You can select strokes that are on different layer, but here your restricted to 'active layer'. 
     
 Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessarily the one on the active layer (since _All_ layer are targeted)
+
+## keymaps
+
+**Alt + X** (GP draw mode only) delete last stroke of current active layer and frame (the last you traced), Hack to replce Ctrl+Z when too slow because cause of heavy scene.
 
 ---
 
@@ -94,6 +102,10 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 ---
 
 ## Changelog:
+  2020-04-11 v0.1.6:
+  - Keymap: Added alt + X shortcut in GP Draw mode to delete last stroke (Hack to use when Ctrl+Z is too slow because of too heavy scene)
+  <!-- - removed Auto-join and fade feature... -->
+
   2020-04-06 v0.1.5:
   - Critical: Fix mistake in layer selection filter when retrieving stroke list to affect.
 

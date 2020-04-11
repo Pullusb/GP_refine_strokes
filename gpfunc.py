@@ -610,3 +610,20 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
 
 
 # TODO make a function to join the two last strokes (best would be with a sampled interpolated curve between the last and first point... hard)
+
+def delete_last_stroke():
+    '''
+    Direct delete of last stroke if any
+    Might be quicker than ctrl-Z for heavy scenes
+    '''
+    # last_strokes = get_strokes(get_frames(get_layers('ACTIVE')[0], 'ACTIVE')[0], 'LAST')[0]
+    try:
+        ss = bpy.context.object.data.layers.active.active_frame.strokes
+        if len(ss):
+            # ss.remove(ss[-1])#does not refresh the viewport
+            delete_stroke(ss, ss[-1])
+        else:
+            return ('WARNING', 'no stroke to remove')
+    except Exception as e:
+        print('Error trying to access last stroke :', e)
+        return ('ERROR', 'Error, could not access last stroke')
