@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 1, 6),
+"version": (0, 2, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
@@ -50,7 +50,7 @@ from .import gp_keymaps
 class GPREFINE_OT_straighten_stroke(Operator):
     bl_idname = "gp.straighten_stroke"
     bl_label = "Straight stroke"
-    bl_description = "Make last stroke straight line between first and last point, Influence after in the redo panel"#base on layer/frame/strokes filters
+    bl_description = "Make stroke a straight line between first and last point, tweak influence in the redo panel"#base on layer/frame/strokes filters
     bl_options = {"REGISTER", "UNDO"}
 
 
@@ -60,11 +60,13 @@ class GPREFINE_OT_straighten_stroke(Operator):
     def execute(self, context):
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+            #get_last_stroke(context)
+        
         for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
             to_straight_line(s, keep_points=True, influence = self.influence_val)#, straight_pressure=True
 
-        ## only on last stroke, maybe only in draw context !
-        # to_straight_line(get_last_stroke(), keep_points=True, influence = self.influence_val)#, straight_pressure=True
         return {"FINISHED"}
     
     def draw(self, context):
@@ -94,6 +96,8 @@ class GPREFINE_OT_select_by_angle(Operator):
     def execute(self, context):
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+        if context.mode == 'PAINT_GPENCIL':# and pref.use_context:
+            return {"CANCELLED"}#disable this one in Paint context
 
         if self.reduce:
             gp_select_by_angle_reducted(self.angle_tolerance, invert=self.invert)
@@ -124,17 +128,18 @@ class GPREFINE_OT_polygonize(Operator):
     reduce : bpy.props.BoolProperty(name="Reduce", description="Reduce angle chunks to one points", 
     default=False)
 
-    delete : bpy.props.BoolProperty(name="delete", description="Delete straigten points", 
+    delete : bpy.props.BoolProperty(name="delete", description="Delete straighten points", 
     default=False)
     
     def execute(self, context):
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+
         for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
             gp_polygonize(s, tol=self.angle_tolerance, influence=self.influence_val, reduce=self.reduce, delete=self.delete)
 
-        ## only last stroke
-        # gp_polygonize(get_last_stroke(), tol=self.angle_tolerance, influence=self.influence_val, reduce=self.reduce)
         return {"FINISHED"}
     
     def draw(self, context):
@@ -159,6 +164,8 @@ class GPREFINE_OT_refine_ops(Operator):
     def execute(self, context):
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
 
         err = None
         ## thinning
@@ -167,51 +174,61 @@ class GPREFINE_OT_refine_ops(Operator):
         
         ## -- pressure and strength action
         if self.action == "ADD_LINE_WIDTH":
-            gp_add_line_width(amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_line_attr('line_width', amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SUB_LINE_WIDTH":
-            gp_add_line_width(amount= -pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_line_attr('line_width', amount= -pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
 
         if self.action == "SET_LINE_WIDTH":
-            gp_set_line_width(amount=pref.set_line_width, t_layer=L, t_frame=F, t_stroke=S) 
+            gp_set_line_attr('line_width', amount=pref.set_line_width, t_layer=L, t_frame=F, t_stroke=S) 
+
+        if self.action == "ADD_LINE_HARDNESS":
+            gp_add_line_attr('hardness', amount=pref.add_hardness, t_layer=L, t_frame=F, t_stroke=S)
+        
+        if self.action == "SUB_LINE_HARDNESS":
+            gp_add_line_attr('hardness', amount= -pref.add_hardness, t_layer=L, t_frame=F, t_stroke=S)
+
+        if self.action == "SET_LINE_HARDNESS":
+            gp_set_line_attr('hardness', amount=pref.set_hardness, t_layer=L, t_frame=F, t_stroke=S) 
+
+        # Points
 
         if self.action == "ADD_PRESSURE":
-            gp_add_pressure(amount=pref.add_pressure, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('pressure', amount=pref.add_pressure, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SUB_PRESSURE":
-            gp_add_pressure(amount= -pref.add_pressure, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('pressure', amount= -pref.add_pressure, t_layer=L, t_frame=F, t_stroke=S)
 
         if self.action == "SET_PRESSURE":
-            gp_set_pressure(amount=pref.set_pressure, t_layer=L, t_frame=F, t_stroke=S)
+            gp_set_attr('pressure', amount=pref.set_pressure, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SET_STRENGTH":
-            gp_set_strength(amount=pref.set_strength, t_layer=L, t_frame=F, t_stroke=S)
+            gp_set_attr('strength', amount=pref.set_strength, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "ADD_STRENGTH":
-            gp_add_strength(amount=pref.set_strength, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('strength', amount=pref.add_strength, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SUB_STRENGTH":
-            gp_add_strength(amount= -pref.set_strength, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('strength', amount= -pref.add_strength, t_layer=L, t_frame=F, t_stroke=S)
 
         ## -- Last stroke modifications
 
         # trim
         if self.action == "TRIM_START":
-            trim_tip_point(endpoint=False)
+            # need not only stroke but frame to be able to delete strokes (pass context)
+            trim_tip_point(context, endpoint=False)
         
         if self.action == "TRIM_END":
-            trim_tip_point()
+            trim_tip_point(context)
 
         if self.action == "GUESS_JOIN":
             err = guess_join(same_material=True, proximity_tolerance=pref.proximity_tolerance, start_point_tolerance=pref.start_point_tolerance)
 
-        if self.action == "STRAIGHT_LAST":
-            ## last stroke (context ?)
-            # to_straight_line(get_last_stroke(), keep_points=False, straight_pressure=True)
+        if self.action == "STRAIGHT_2_POINTS":
             for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
                 to_straight_line(s, keep_points=False, straight_pressure=True)
         
-        # if self.action == "POLYGONIZE":
+        # if self.action == "POLYGONIZE":# own operator for redo panel
         #     gp_polygonize(pref.poly_angle_tolerance)
 
         ## -- Infos
@@ -247,6 +264,7 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
         layout.prop(context.scene.gprsettings, 'layer_tgt')
         layout.prop(context.scene.gprsettings, 'frame_tgt')
         layout.prop(context.scene.gprsettings, 'stroke_tgt')
+        layout.prop(context.scene.gprsettings, 'use_context')
         # row = layout.row(align=False)
         #row = layout.split(align=True,percentage=0.5)
         # row.label(text='arrow choice')
@@ -290,6 +308,15 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
         row.operator('gp.refine_strokes', text='Set line width').action = 'SET_LINE_WIDTH'
 
         row = layout.row()
+        row.prop(context.scene.gprsettings, 'add_hardness')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_HARDNESS'# Sub line_width
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_HARDNESS'# Add line_width
+
+        row = layout.row()
+        row.prop(context.scene.gprsettings, 'set_hardness')
+        row.operator('gp.refine_strokes', text='Set hardness').action = 'SET_HARDNESS'
+
+        row = layout.row()
         row.prop(context.scene.gprsettings, 'add_pressure')
         row.operator('gp.refine_strokes', text='-').action = 'SUB_PRESSURE'# Sub pressure
         row.operator('gp.refine_strokes', text='+').action = 'ADD_PRESSURE'# Add pressure
@@ -307,8 +334,8 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
         row.prop(context.scene.gprsettings, 'set_strength')
         row.operator('gp.refine_strokes', text='Set strength').action = 'SET_STRENGTH'#, icon='GREASEPENCIL'
 
-class GPREFINE_PT_last_stroke_refine(GPR_refine, Panel):
-    bl_label = "Stroke refine"#"Strokes filters"
+class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
+    bl_label = "Stroke reshape"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
     # bl_options = {'DEFAULT_CLOSED'}
 
@@ -322,7 +349,7 @@ class GPREFINE_PT_last_stroke_refine(GPR_refine, Panel):
         
         row = layout.row()
         row.operator('gp.straighten_stroke', text='Straighten', icon='CURVE_PATH')
-        row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_LAST'
+        row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
         row = layout.row()
         row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
         row.operator('gp.polygonize_stroke', icon='LINCURVE')
@@ -386,6 +413,9 @@ class GPR_refine_prop(PropertyGroup):
         )
     )
 
+    use_context : BoolProperty(name="Target last in paint mode", options={'HIDDEN'},
+    description="Change target according to context.\nIn paint mode target last stroke only, bypassing selector", 
+    default=True)
     ## Tip thinner
 
     percentage_use_sync_tip_len : BoolProperty(name="Sync tip fade", options={'HIDDEN'},
@@ -408,7 +438,7 @@ class GPR_refine_prop(PropertyGroup):
     description="One the parts that are not fading, put all points pressure to the level of the maximum on the line, fade from this value on tips", 
     default=False)
 
-    ## width pressure and strength
+    ### Line and points attributes
 
     # width (brush radius)
     set_line_width : IntProperty(name="line width", description="Line width to set (correspond to brush radius, pixel value)", options={'HIDDEN'}, 
@@ -417,6 +447,13 @@ class GPR_refine_prop(PropertyGroup):
     add_line_width : IntProperty(name="line width", description="Line width radius to add (correspond to brush radius, pixel value)", options={'HIDDEN'}, 
     default=1, min=0, max=300, soft_min=0, soft_max=100)
 
+    # hardness (opacity gradient from border to middle of the line)
+    set_hardness : FloatProperty(name="Hardness", description="Hardness to set\nAmount of transparency to apply from the border of the point to the center.\nWorks only when the brush is using stroke materials of Dot or Box style", 
+    default=1.0, min=0, max=1.0, soft_min=0, soft_max=1.0, precision=2, options={'HIDDEN'})
+
+    add_hardness : FloatProperty(name="Hardness", description="Hardness radius to add\nAmount of transparency to apply from the border of the point to the center.\nWorks only when the brush is using stroke materials of Dot or Box style", 
+    default=0.1, min=0, max=1.0, soft_min=0, soft_max=1.0, precision=2, options={'HIDDEN'})
+
     # pressure (pen pressure)
     set_pressure : FloatProperty(name="Pressure", description="Points pressure to set (thickness)", options={'HIDDEN'}, 
     default=1.0, min=0, max=5.0, soft_min=0, soft_max=2.0, step=3, precision=2)
@@ -424,6 +461,7 @@ class GPR_refine_prop(PropertyGroup):
     add_pressure : FloatProperty(name="Pressure", description="Points pressure to add (thickness)", options={'HIDDEN'}, 
     default=0.1, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
     
+    # strength (opacity)
     set_strength : FloatProperty(name="Strength", description="Points strength to set (opacity)", options={'HIDDEN'}, 
     default=1.0, min=0, max=5.0, soft_min=0, soft_max=2.0, step=3, precision=2)
 
@@ -497,7 +535,7 @@ GPREFINE_OT_straighten_stroke,
 GPREFINE_OT_select_by_angle,
 GPREFINE_OT_polygonize,
 GPREFINE_PT_stroke_refine_panel,#main panel
-GPREFINE_PT_last_stroke_refine,
+GPREFINE_PT_stroke_shape_refine,
 GPREFINE_PT_thickness_opacity,
 GPREFINE_PT_thin_tips,
 # GPREFINE_PT_infos_print,

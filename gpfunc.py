@@ -71,7 +71,8 @@ def get_strokes(frame, target='SELECT'):
         return frame.strokes
     
     elif target == 'LAST':
-        return [frame.strokes[-1]]
+        # index is -1 or 0 if draw on back)
+        return [frame.strokes[get_last_index()]]
     
     return []  
 
@@ -82,7 +83,7 @@ def strokelist(t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
     '''
     ## TODO: when stroke is LAST and layer is ALL it can be the last of all layers, priority must be set to active layer.
     
-    # superBAD: (not flattened) : [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
+    # superBAD - WRONG: (not flattened) : [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
 
     # itertool not tested enough, flatenned twice like this need speed tests...
     """ import itertools# un-nesting triple comprehension list
@@ -98,8 +99,12 @@ def strokelist(t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
 
     return all_strokes
 
-def get_last_stroke():
-    return bpy.context.object.data.layers.active.active_frame.strokes[-1]
+def get_last_stroke(context=None):
+    '''return last stroke (first if )'''
+    if not context:
+        context=bpy.context
+    
+    return bpy.context.object.data.layers.active.active_frame.strokes[get_last_index(context)]
 
 def selected_strokes():
     strokes = []
@@ -112,38 +117,46 @@ def selected_strokes():
 
 ### -- FUNCTIONS --
 
-## -- overall pressure and strength
+def get_tgts(context=None):
+    '''return a tuple with the 3 pref target (layers, frame, stroke)'''
+    if not context:
+        context = bpy.context
+    pref = context.scene.gprsettings
+    return pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
 
 
-def gp_add_line_width(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+def get_last_index(context=None):
+    if not context:
+        context = bpy.context
+    return 0 if context.tool_settings.use_gpencil_draw_onback else -1
+
+
+## -- overall attributes
+
+#TODO use a foreach_set on points for speed
+## Line attributes
+def gp_add_line_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    '''Get a stroke attribut, an int to Add, target filters'''
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.line_width += amount
+        setattr(s, attr, getattr(s, attr) + amount)
 
-def gp_set_line_width(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+def gp_set_line_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.line_width = amount
+        setattr(s, attr, amount)
 
-def gp_add_pressure(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+## Points attributes
+
+def gp_add_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    '''Get a point attribut, an int to Add, target filters'''
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         for p in s.points:
-            p.pressure += amount
-
-def gp_set_pressure(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
-    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        #TODO use a foreach_set on points for speed
-        for p in s.points:
-            p.pressure = amount
-
-def gp_add_strength(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+            setattr(p, attr, getattr(p, attr) + amount)
+            
+def gp_set_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         for p in s.points:
-            p.strength += amount
+            setattr(p, attr, amount)
 
-def gp_set_strength(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
-    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        #TODO use a foreach_set on points for speed
-        for p in s.points:
-            p.strength = amount
 
 ## -- thinner tips
 
@@ -245,18 +258,42 @@ def thin_stroke_tips_percentage(tip_len=30, variance=0, t_layer='ALL', t_frame='
 
 ## -- Trim / Progressive erase
 
-def trim_tip_point(endpoint=True):
+def trim_tip_point(context, endpoint=True):
     '''endpoint : delete last point, else first point'''
-    last = bpy.context.object.data.layers.active.active_frame.strokes[-1]
-    if len(last.points) > 2:# erase point
-        if endpoint:
-            last.points.pop(index=-1)#pop default
-        else:
-            last.points.pop(index=0)
-    else:# erase lines
-        for i in range( len(last.points) ):
-            last.points.pop()
-        bpy.context.object.data.layers.active.active_frame.strokes.remove(last)
+    pref = context.scene.gprsettings
+    L, F, S = get_tgts(context)
+    ### Last
+    # can just filter by task
+    if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+        layer = bpy.context.object.data.layers.active
+        if not layer or not layer.active_frame or not len(layer.active_frame.strokes):
+            return
+        
+        last = layer.active_frame.strokes[get_last_index(context)]#-1 (0 with draw on back is on)
+        if len(last.points) > 2:# erase point
+            if endpoint:
+                last.points.pop(index=-1)#pop default
+            else:
+                last.points.pop(index=0)
+        else:# erase line
+            for _ in range( len(last.points) ):
+                last.points.pop()
+            layer.active_frame.strokes.remove(last)
+        return
+
+    ### filters
+    for l in get_layers(target=L):
+        for f in get_frames(l, target=F):
+            for s in get_strokes(f, target=S):
+                if len(s.points) > 2:# erase point
+                    if endpoint:
+                        s.points.pop(index=-1)# pop last default
+                    else:
+                        s.points.pop(index=0)
+                else:# erase line
+                    for i in range( len(s.points) ):
+                        s.points.pop()
+                    f.strokes.remove(s)
 
 #TODO - preserve tip triming (option or another func), (need a "detect fade" function to give at with index the point really start to fade and offset that) 
 

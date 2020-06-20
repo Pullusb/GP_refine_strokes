@@ -12,18 +12,17 @@ Blender addon - Bunch of functions for post-drawing strokes refine
 ### Where ?
 Panel in sidebar : 3D view > sidebar 'N' > Gpencil > Strokes refine (need to be in a GP mode to appear)
 
-
-
 ## Description
 
 Various tools to affect strokes. Use F9 key to use the _redo_ options when available.  
   
-The important things is that most of the tool act according to the  filter you define on top:  
+The important things is that almost all the tools act according to the filter you define on top:  
 
 ![target_filter](https://github.com/Pullusb/images_repo/raw/master/GPR_strokes_target_filter.png)
 
 This is based on three level : Layer > Frame > Stroke. Be carefull with the targets.  
-Also note that a few tools do not use the filter and works directly on the last stroke (mostly).
+
+If you tick `Target last in paint mode`, the target scope is overrided during draw mode and only last stroke is affected.
 
 ### Stroke refine
 
@@ -51,15 +50,13 @@ The other straighten the point and you can affect influence.
 Like the straighten above but by splitting on angles between point, user can manage angle tolerance.  
 ![polygonize](https://github.com/Pullusb/images_repo/raw/master/GPR_polygonise.gif)  
   
-
-
 ### Thickness and opacity
 
 Modify the points attributes _pressure_ or _strength_ for targeted strokes (uses filter)  
 Can either set it or add/substract by some amount
 ![point attribute](https://github.com/Pullusb/images_repo/raw/master/GPR_set-pressure-strength.gif)  
 
-  
+
 ### Thin stroke tips
 
 **refine stroke** by progressively fade pressure from middle to tip.  
@@ -71,12 +68,9 @@ Can either set it or add/substract by some amount
 
 Print points infos: Display list of points pressure in console (according to filter)
 
-
-
 ### Further notes
 
-
-Filter management can be tricky sometimes (Need a rework to simplify common operation)  
+Filter management can be tricky sometimes (Need a rework to simplify common operation)
 Examples:  
 Layer: _Active_, Frame: _Active_, stroke: _Selected_ -> You can select strokes that are on different layer, but here your restricted to 'active layer'. 
     
@@ -90,37 +84,49 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 
 
 ## Todo:
-- +/- button values strength need fix
-- add preset that override filter to work on last stroke or selection. Full filter is sometimes too tricky...
-- feature Context actions : Override scope, default action can affect must affect selection if context mode is edit_stroke (as and option ?)
 - auto-join pressure : make a fade in pressure from chosen old points to new points
 - auto-join subdiv : add an intermediate point to avoid a "break" in the line when the auto join
 - feature action preference : make an addon preferences to change default options.
 
 <!-- ### Ideas considered : -->
+<!-- - feature Context actions : Override scope, default action must affect selection if context mode is edit_stroke (as and option ?) -->
 
 ---
 
 ## Changelog:
-  2020-04-11 v0.1.6:
-  - Keymap: Added alt + X shortcut in GP Draw mode to delete last stroke (Hack to use when Ctrl+Z is too slow because of too heavy scene)
-  <!-- - removed Auto-join and fade feature... -->
 
-  2020-04-06 v0.1.5:
-  - Critical: Fix mistake in layer selection filter when retrieving stroke list to affect.
+0.2.0 - 2020-06-20:
 
-  2020-04-02 v0.1.4:
-  - make props non animatable (used options={'HIDDEN'} value)
-  - tweaked layer select mode to prevent potential error
-  - line width thickness add/sub and set
+- feature : New tickbox to make paint context override filters to target last stroke only for majority of operations
+- feature : added control of hardness
+- fix : corrected add/sub strength
+- code : refactor of strokes/points tweaking functions (now use get/set attr)
 
-  2020-04-01 v0.1.3:
-  - addon auto updater in prefs
+0.1.6 - 2020-04-11:
 
-  2020-03-04 v0.1.2:
-  - fix set/add stroke
-  - added substract stroke option
-  - Polygonize can now directly delete intermediate point (yeye !)
+- Keymap: Added alt + X shortcut in GP Draw mode to delete last stroke (Hack to use when Ctrl+Z is too slow because of too heavy scene)
+<!-- - removed Auto-join and fade feature... -->
 
-  2019-11-03 v0.1.0:
-  - New option to toggle visibility and lock object
+0.1.5 - 2020-04-06:
+
+- Critical: Fix mistake in layer selection filter when retrieving stroke list to affect.
+
+0.1.4 - 2020-04-02:
+
+- make props non animatable (used options={'HIDDEN'} value)
+- tweaked layer select mode to prevent potential error
+- line width thickness add/sub and set
+
+0.1.3 - 2020-04-01:
+
+- addon auto updater in prefs
+
+0.1.2 - 2020-03-04:
+
+- fix set/add stroke
+- added substract stroke option
+- Polygonize can now directly delete intermediate point (yeye !)
+
+0.1.0 - 2019-11-03:
+
+- New option to toggle visibility and lock object
