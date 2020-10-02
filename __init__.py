@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 2, 0),
+"version": (0, 2, 1),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
@@ -414,7 +414,7 @@ class GPR_refine_prop(PropertyGroup):
     )
 
     use_context : BoolProperty(name="Target last in paint mode", options={'HIDDEN'},
-    description="Change target according to context.\nIn paint mode target last stroke only, bypassing selector", 
+    description="Change target according to context.\nIn paint mode target last stroke only, (force 'ACTIVE', 'ACTIVE', 'LAST')", 
     default=True)
     ## Tip thinner
 
