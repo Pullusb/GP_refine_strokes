@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 2, 1),
+"version": (0, 3, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
@@ -111,6 +111,53 @@ class GPREFINE_OT_select_by_angle(Operator):
         layout.prop(self, "reduce")
         layout.prop(self, "invert")
 
+
+class GPREFINE_OT_select_by_length(Operator):
+    bl_idname = "gp.select_by_length"
+    bl_label = "Select by length"
+    bl_description = "Select stroke by 3D length (must be in edit mode)"#base on layer/frame/strokes filters
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL')
+
+    length : bpy.props.FloatProperty(name="Length", description="Length tolerance", 
+    default=0.010, min=0.0, max=1000, step=0.1, precision=4)
+
+    include_single_points : bpy.props.BoolProperty(name='Include single points',
+    description="Include single points (0 length) in the selection", default=True)
+    
+    # self.shift : bpy.props.BoolProperty()
+
+    def invoke(self, context, event):
+        self.length = context.scene.gprsettings.length
+        self.shift = event.shift
+        return self.execute(context)
+
+    def execute(self, context):
+        # pref = context.scene.gprsettings
+        # L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+        
+        # if not context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL'):# and pref.use_context:
+        #     return {"CANCELLED"}#disable this one in Paint context
+
+        ## select stroke based on 3D length
+        for l in context.object.data.layers:
+            if l.lock or l.hide:
+                continue
+            for s in l.active_frame.strokes:
+                if len(s.points) == 1:
+                    s.select = self.include_single_points
+                    continue
+                s.select = get_stroke_length(s) <= self.length
+
+        return {"FINISHED"}
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "length")
+        layout.prop(self, "include_single_points")
 
 class GPREFINE_OT_polygonize(Operator):
     bl_idname = "gp.polygonize_stroke"
@@ -249,9 +296,9 @@ class GPR_refine:
     bl_region_type = "UI"
     bl_category = "Gpencil"
 
-    @classmethod
-    def poll(cls, context):
-        return (context.object is not None and context.object.type == 'GPENCIL')
+    # @classmethod
+    # def poll(cls, context):
+    #     return (context.object is not None and context.object.type == 'GPENCIL')
 
 class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
     bl_label = "Strokes refine"
@@ -341,7 +388,7 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_split = True
+        # layout.use_property_split = True
         row = layout.row()
         row.operator('gp.refine_strokes', text='Trim start', icon='TRACKING_CLEAR_FORWARDS').action = 'TRIM_START'
         row.operator('gp.refine_strokes', text='Trim end', icon='TRACKING_CLEAR_BACKWARDS').action = 'TRIM_END'
@@ -350,9 +397,16 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
         row = layout.row()
         row.operator('gp.straighten_stroke', text='Straighten', icon='CURVE_PATH')
         row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
+        
         row = layout.row()
         row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
         row.operator('gp.polygonize_stroke', icon='LINCURVE')
+
+        # layout.separator()
+        row = layout.row(align=True)
+        row.prop(context.scene.gprsettings, 'length')
+        row.operator('gp.select_by_length', text='Select', icon='DRIVER_DISTANCE')
+        
         # row.operator('gp.refine_strokes', text='Polygonize', icon='IPO_CONSTANT').action = 'POLYGONIZE'#generic polygonize
         
         layout.separator()
@@ -483,6 +537,12 @@ class GPR_refine_prop(PropertyGroup):
     default=45, min=1, max=179, soft_min=5, soft_max=0.1, step=1, precision=1)
 
 
+    # length tolerance
+    length : bpy.props.FloatProperty(name="Length", description="Length tolerance", 
+    default=0.010, min=0.0, max=1000, step=0.1, precision=4, options={'HIDDEN'})
+
+
+
 ## updater
 class GPR_addonprefs(bpy.types.AddonPreferences):
     bl_idname = __name__
@@ -534,6 +594,7 @@ GPREFINE_OT_refine_ops,
 GPREFINE_OT_straighten_stroke,
 GPREFINE_OT_select_by_angle,
 GPREFINE_OT_polygonize,
+GPREFINE_OT_select_by_length,
 GPREFINE_PT_stroke_refine_panel,#main panel
 GPREFINE_PT_stroke_shape_refine,
 GPREFINE_PT_thickness_opacity,

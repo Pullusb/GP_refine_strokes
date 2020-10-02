@@ -45,6 +45,9 @@ The other straighten the point and you can affect influence.
 **select by angle** : F9 to access angle tolerance tweaking
 ![angle based selection](https://github.com/Pullusb/images_repo/raw/master/GPR_select_by_angle.gif)
 
+**select by length** : Select stroke in active frame that are shorter than given length.  
+Hint: you can discard single points (considered 0 length strokes) in the redo panel
+
 
 **polygonize**  
 Like the straighten above but by splitting on angles between point, user can manage angle tolerance.  
@@ -94,6 +97,11 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 ---
 
 ## Changelog:
+
+0.3.0 - 2020-10-02:
+
+- feat: select by stroke length
+- UI: remove property split for upper panel (more readable)
 
 0.2.0 - 2020-06-20:
 
