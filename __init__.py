@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 3, 0),
+"version": (0, 4, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
@@ -50,13 +50,18 @@ from .import gp_keymaps
 class GPREFINE_OT_straighten_stroke(Operator):
     bl_idname = "gp.straighten_stroke"
     bl_label = "Straight stroke"
-    bl_description = "Make stroke a straight line between first and last point, tweak influence in the redo panel"#base on layer/frame/strokes filters
+    bl_description = "Make stroke a straight line between first and last point, tweak influence in the redo panel\
+        \nshift+click to reset infuence to 100%\
+        \nctrl+click for equalize thickness"#base on layer/frame/strokes filters
     bl_options = {"REGISTER", "UNDO"}
 
 
     influence_val : bpy.props.FloatProperty(name="Straight force", description="Straight interpolation percentage", 
     default=100, min=0, max=100, step=2, precision=1, subtype='PERCENTAGE', unit='NONE')#NONE
     
+    homogen_pressure : bpy.props.BoolProperty(name="Equalize pressure", 
+    description="Change the pressure of the point (to the mean of all pressure points)", default=False)
+
     def execute(self, context):
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
@@ -65,18 +70,81 @@ class GPREFINE_OT_straighten_stroke(Operator):
             #get_last_stroke(context)
         
         for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
-            to_straight_line(s, keep_points=True, influence = self.influence_val)#, straight_pressure=True
+            to_straight_line(s, keep_points=True, influence = self.influence_val, straight_pressure = self.homogen_pressure)
+        return {"FINISHED"}
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "influence_val")
+        layout.prop(self, "homogen_pressure")
+
+    def invoke(self, context, event):
+        if context.mode not in ('PAINT_GPENCIL', 'EDIT_GPENCIL'):
+            return {"CANCELLED"}
+        # self.homogen_pressure = False 
+        if event.shift:
+            self.influence_val = 100
+        self.homogen_pressure = event.ctrl
+        # if event.ctrl:
+        #     self.homogen_pressure = True
+        return self.execute(context)
+
+
+class GPREFINE_OT_to_circle_shape(Operator):
+    bl_idname = "gp.to_circle_shape"
+    bl_label = "Shape Circle"
+    bl_description = "Round the stroke(s) to a perfect circle, tweak influence in the redo panel\
+        \nshift+click to reset infuence to 100%\
+        \nctrl+click for equalize thickness"
+    bl_options = {"REGISTER", "UNDO"}
+
+
+    influence_val : bpy.props.FloatProperty(name="Influence", description="Shape shifting interpolation percentage",
+    default=100, min=0, max=100, step=2, precision=1, subtype='PERCENTAGE', unit='NONE')#NONE
+
+    homogen_pressure : bpy.props.BoolProperty(name="Equalize Pressure", 
+    description="Change the pressure of the point (to the mean of all pressure points)", default=False)
+    
+    individual_strokes : bpy.props.BoolProperty(name="Individual Strokes", 
+    description="Make one circle with all selected point instead of one circle per stroke", default=False)
+
+    def execute(self, context):
+        #base on layer/frame/strokes filters -> filter point inside operator
+        pref = context.scene.gprsettings
+        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+
+        if self.individual_strokes or context.mode == 'PAINT_GPENCIL':#all strokes individually
+            for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
+                to_circle_cast_to_average(context.object, s.points, influence = self.influence_val, straight_pressure = self.homogen_pressure)
+        else:
+            point_list = []
+            for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
+                for p in s.points:
+                    if p.select:
+                        point_list.append(p)
+            to_circle_cast_to_average(context.object, point_list, influence = self.influence_val, straight_pressure = self.homogen_pressure)
+            
 
         return {"FINISHED"}
     
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "influence_val")
+        layout.prop(self, "homogen_pressure")
+        if context.mode != 'PAINT_GPENCIL':# Not taken into account in paint (no edits, only last)
+            layout.prop(self, "individual_strokes")
 
-    # def invoke(self, context, event):
-        
-    #     # return {'CANCELLED'}
-
+    def invoke(self, context, event):
+        if context.mode not in ('PAINT_GPENCIL', 'EDIT_GPENCIL'):
+            return {"CANCELLED"}
+        if event.shift:
+            self.influence_val = 100
+        self.homogen_pressure = event.ctrl
+        # if event.ctrl:
+        #     self.homogen_pressure = True
+        return self.execute(context)
 
 class GPREFINE_OT_select_by_angle(Operator):
     bl_idname = "gp.select_by_angle"
@@ -399,6 +467,9 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
         row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
         
         row = layout.row()
+        row.operator('gp.to_circle_shape', text='To Circle', icon='MESH_CIRCLE')
+
+        row = layout.row()
         row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
         row.operator('gp.polygonize_stroke', icon='LINCURVE')
 
@@ -592,6 +663,7 @@ GPR_addonprefs,# updater
 GPR_refine_prop,
 GPREFINE_OT_refine_ops,
 GPREFINE_OT_straighten_stroke,
+GPREFINE_OT_to_circle_shape,
 GPREFINE_OT_select_by_angle,
 GPREFINE_OT_polygonize,
 GPREFINE_OT_select_by_length,

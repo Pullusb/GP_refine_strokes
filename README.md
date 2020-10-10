@@ -40,8 +40,16 @@ Detection radius : Proximity tolerance to detect surrounding strokes boundarys, 
 Two buttons  
 One keep only first and last point so in-between point information like thickness are lost  
 The other straighten the point and you can affect influence.
+shift+click to reset infuence to 100%
+ctrl+click for homogen pressure
 ![straighten](https://github.com/Pullusb/images_repo/raw/master/GPR_straight_influence.gif)
   
+**to Circle**
+Tranform into average circle
+shift+click to reset infuence to 100%
+ctrl+click for homogen pressure
+
+
 **select by angle** : F9 to access angle tolerance tweaking
 ![angle based selection](https://github.com/Pullusb/images_repo/raw/master/GPR_select_by_angle.gif)
 
@@ -97,6 +105,12 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 ---
 
 ## Changelog:
+
+0.4.0 - 2020-10-10:
+
+- Feat: to Circle operator with options influence, thickness equalization and individual stroke
+- add flatten pressure for straight stroke with influence tweaking
+- some code correction
 
 0.3.0 - 2020-10-02:
 

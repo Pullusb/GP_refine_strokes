@@ -343,16 +343,18 @@ def pseudo_subdiv(a, b, c, d):
 
 def to_straight_line(s, keep_points=True, influence=100, straight_pressure=True):
     '''
-    keep points : if false only start and end point stay
-    straight_pressure : (not available with keep point) take the mean pressure of all points and apply to stroke.
+    keep points : if false only start and end point stay delete all other
+    straight_pressure : take the mean pressure of all points and apply to stroke.
     '''
     
     p_len = len(s.points)
     if p_len <= 2: # 1 or 2 points only, cancel
         return
 
+    if straight_pressure:
+        mean_pressure = mean([p.pressure for p in s.points])#can use a foreach_get but might not be faster.
+
     if not keep_points:
-        if straight_pressure: mean_pressure = mean([p.pressure for p in s.points])#can use a foreach_get but might not be faster.
         for i in range(p_len-2):
             s.points.pop(index=1)
         if straight_pressure:
@@ -362,12 +364,12 @@ def to_straight_line(s, keep_points=True, influence=100, straight_pressure=True)
     else:
         A = s.points[0].co
         B = s.points[-1].co
-        ab_dist = vector_len_from_coord(A,B)
+        # ab_dist = vector_len_from_coord(A,B)
         full_dist = get_stroke_length(s)
         dist_from_start = 0.0
         coord_list = []
         
-        for i in range(1, p_len-1):#all but first and last
+        for i in range(1, p_len-1):# all but first and last
             dist_from_start += vector_len_from_coord(s.points[i-1],s.points[i])
             ratio = dist_from_start / full_dist
             # dont apply directly (change line as we measure it in loop)
@@ -377,6 +379,11 @@ def to_straight_line(s, keep_points=True, influence=100, straight_pressure=True)
         for i in range(1, p_len-1):
             #s.points[i].co = coord_list[i-1]#direct super straight 100%
             s.points[i].co = point_from_dist_in_segment_3d(s.points[i].co, coord_list[i-1], influence / 100)
+
+        if straight_pressure:
+            # influenced pressure
+            for p in s.points:
+                p.pressure = p.pressure + ((mean_pressure - p.pressure) * (influence / 100))
 
 
 #without reduce (may be faster)
@@ -664,3 +671,118 @@ def delete_last_stroke():
     except Exception as e:
         print('Error trying to access last stroke :', e)
         return ('ERROR', 'Error, could not access last stroke')
+
+
+
+### ---------- 
+###  To Circle
+### ----------
+
+def circle_2d_closed(coord, r, num_segments):
+    '''
+    create circle, ref: http://slabode.exofire.net/circle_draw.shtml
+    coord: coordinate of circle center (vector 2d)
+    r: radius (float)
+    num_segments: number of segment to compose circle, prefer multiples of 4 (int)
+    return a list of Vectors
+    "closed" mean last point is overlapping first
+    '''
+    cx, cy = coord
+    points = []
+    theta = 2 * 3.1415926 / num_segments
+    c = math.cos(theta) #precalculate the sine and cosine
+    s = math.sin(theta)
+    x = r # we start at angle = 0
+    y = 0
+    for i in range(num_segments):
+        #bgl.glVertex2f(x + cx, y + cy) # output vertex
+        points.append( Vector((x + cx, y + cy)) )
+        # apply the rotation matrix
+        t = x
+        x = c * x - s * y
+        y = s * t + c * y
+    # append first point also as last
+    points.append(points[0])
+    return points
+
+def magnet_on_target(src, tgt):
+    '''Proximity transfer from a 2d coord list to another'''
+    import mathutils
+    casted_coord = []
+    for sp in src:
+        res = sp
+        prevdist = 100000
+        for i in range(len(tgt)-1):
+            pos, percentage = mathutils.geometry.intersect_point_line(sp, tgt[i], tgt[i+1])
+
+            if percentage <= 0:# at head
+                pos = tgt[i]
+            elif 1 <= percentage:# at tail
+                pos = tgt[i+1]
+
+            ## check if distance is shorter than previous
+            dist = (pos-sp).length
+            if dist < prevdist:
+                # dist can be 'nan', in this case does not enter condition, res equal sp
+                res = pos
+                prevdist = dist
+        
+        casted_coord.append(res)
+    return casted_coord
+
+
+""" raw func
+def to_circle_cast_to_average():
+    ob = C.object
+    stroke = ob.data.layers.active.active_frame.strokes[-1]
+    coords = [location_to_region(ob.matrix_world @ p.co) for p in stroke.points]
+
+    ## Determine center : mean center ? -better fitting- bounding box (equivalent ?)
+    # center = Vector(np.median(coords, axis=0))
+    center = Vector(np.mean(coords, axis=0))# mean seem to have better placement than median for user
+
+    ## Determine radius (bounding box ? median length ?)
+    dist_list = [(center - co).length for co in coords]
+
+    radius = np.mean(dist_list)
+    # radius = np.median(dist_list)
+
+    circle = circle_2d_closed(center, radius, 128)#64
+
+    cast_coords = magnet_on_target(coords, circle)
+    for p, nco in zip(stroke.points, cast_coords):
+        p.co = ob.matrix_world.inverted() @ region_to_location(nco, p.co)# depth at p.co no good... need reproject """
+
+def to_circle_cast_to_average(ob, point_list, influence = 100, straight_pressure = False):
+    '''Project given points on 2d average points'''
+
+    ## TODO reproject on plane if strokes are found coplanar
+    ## else reproject on axis given by current blend
+
+    coords = [location_to_region(ob.matrix_world @ p.co) for p in point_list]
+
+    ## Determine center : mean center ? -better fitting- bounding box (equivalent ?)
+    # center = Vector(np.median(coords, axis=0))
+    center = Vector(np.mean(coords, axis=0))# mean seem to have better placement than median for user
+
+    ## Determine radius (bounding box ? median length ?)
+    dist_list = [(center - co).length for co in coords]
+
+    radius = np.mean(dist_list)
+    # radius = np.median(dist_list)
+
+    circle = circle_2d_closed(center, radius, 128)#64
+
+    cast_coords = magnet_on_target(coords, circle)
+    for p, nco in zip(point_list, cast_coords):
+        ## /!\ depth at old point coordinate, jaggy depth... need custom reproject (or warn user to reproject) ?
+        new_co3d = ob.matrix_world.inverted() @ region_to_location(nco, p.co)
+        p.co = point_from_dist_in_segment_3d(p.co, new_co3d, influence / 100)
+    
+    if straight_pressure:
+        m_pressure = np.median([p.pressure for p in point_list])
+        # m_pressure = np.mean([p.pressure for p in point_list])
+        for p in point_list:
+            # add a percentage of the difference
+            p.pressure = p.pressure + ((m_pressure - p.pressure) * (influence / 100))
+            # p.pressure = m_pressure #without influence
