@@ -106,6 +106,11 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 
 ## Changelog:
 
+0.4.1 - 2020-10-31:
+
+- fix: auto-join bug
+
+
 0.4.0 - 2020-10-10:
 
 - Feat: to Circle operator with options influence, thickness equalization and individual stroke

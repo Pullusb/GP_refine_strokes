@@ -316,7 +316,8 @@ def backup_stroke(s, ids=None):
     stroke_attr_list = ('display_mode', 'draw_cyclic', 'end_cap_mode', 'gradient_factor', 'gradient_shape', 'groups', 'is_nofill_stroke', 'line_width', 'material_index', 'start_cap_mode' )#
     sdic = {}
     for att in stroke_attr_list:
-        sdic[att] = getattr(s, att)
+        if hasattr(s, att):
+            sdic[att] = getattr(s, att)
     points = []
     if ids:
         for pid in ids:
@@ -635,7 +636,8 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
         ns = bpy.context.object.data.layers.active.active_frame.strokes.new()
         for s_attr in ('display_mode', 'draw_cyclic', 'end_cap_mode', 'gradient_factor', 'gradient_shape', 'line_width', 'material_index', 'start_cap_mode' ):
             ## readonly : 'groups', 'is_nofill_stroke',
-            setattr(ns, s_attr, getattr(last,s_attr))#same stroke settings as last stroke
+            if hasattr(ns, s_attr):
+                setattr(ns, s_attr, getattr(last,s_attr))#same stroke settings as last stroke
 
         ## add all points
         ns.points.add(len(all_points_dic))
