@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 4, 1),
+"version": (0, 4, 2),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
@@ -457,18 +457,21 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
     def draw(self, context):
         layout = self.layout
         # layout.use_property_split = True
+        
+        ## stroke trimming
         row = layout.row()
         row.operator('gp.refine_strokes', text='Trim start', icon='TRACKING_CLEAR_FORWARDS').action = 'TRIM_START'
         row.operator('gp.refine_strokes', text='Trim end', icon='TRACKING_CLEAR_BACKWARDS').action = 'TRIM_END'
         layout.separator()
         
+        ## Shaping
         row = layout.row()
         row.operator('gp.straighten_stroke', text='Straighten', icon='CURVE_PATH')
         row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
         
         row = layout.row()
         row.operator('gp.to_circle_shape', text='To Circle', icon='MESH_CIRCLE')
-
+        
         row = layout.row()
         row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
         row.operator('gp.polygonize_stroke', icon='LINCURVE')
@@ -492,6 +495,24 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
         addon_updater_ops.check_for_update_background()# updater
         addon_updater_ops.update_notice_box_ui(self, context)# updater
 
+
+class GPREFINE_PT_resampling(GPR_refine, Panel):
+    bl_label = "Resampling Presets"
+    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        # layout.use_property_split = True
+
+        ## resampling preset
+        col = layout.column(align=True)
+        for i, val in enumerate((0.002, 0.004, 0.006, 0.008, 0.01, 0.015, 0.02, 0.03)):
+            if i % 4 == 0:
+                row = col.row(align=True)
+            row.operator('gpencil.stroke_sample', text = str(val) ).length = val
+        layout.operator('gpencil.stroke_simplify').factor = 0.002
+        layout.operator('gpencil.stroke_subdivide')
 
 class GPREFINE_PT_infos_print(GPR_refine, Panel):
     bl_label = "Infos"#"Strokes filters"
@@ -670,6 +691,7 @@ GPREFINE_OT_select_by_length,
 GPREFINE_PT_stroke_refine_panel,#main panel
 GPREFINE_PT_stroke_shape_refine,
 GPREFINE_PT_thickness_opacity,
+GPREFINE_PT_resampling,
 GPREFINE_PT_thin_tips,
 # GPREFINE_PT_infos_print,
 gp_keymaps.GPREFINE_OT_delete_last_stroke,

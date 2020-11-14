@@ -106,10 +106,14 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 
 ## Changelog:
 
+
+0.4.2 - 2020-11-14:
+
+- changed default simplify value to `0.002`
+
 0.4.1 - 2020-10-31:
 
 - fix: auto-join bug
-
 
 0.4.0 - 2020-10-10:
 

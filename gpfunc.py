@@ -652,7 +652,7 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
         delete_stroke(bpy.context.object.data.layers.active.active_frame.strokes, last)
         
     else:
-        return 'No close stroke found to join last.\nTry increse the tolerance and check if there is no depth offset from your point of view'
+        return 'No close stroke found to join last.\nTry increasing the tolerance and check if there is no depth offset from your point of view'
 
 
 # TODO make a function to join the two last strokes (best would be with a sampled interpolated curve between the last and first point... hard)
