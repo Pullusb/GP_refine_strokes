@@ -107,6 +107,11 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 ## Changelog:
 
 
+0.4.3 - 2021-02-07:
+
+- code: Added secondary stroke eraser shortcut code disabled (commented, not ready yet)
+- fix: updater verbose mode to False
+
 0.4.2 - 2020-11-14:
 
 - changed default simplify value to `0.002`

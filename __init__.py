@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 4, 2),
+"version": (0, 4, 3),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
@@ -694,7 +694,7 @@ GPREFINE_PT_thickness_opacity,
 GPREFINE_PT_resampling,
 GPREFINE_PT_thin_tips,
 # GPREFINE_PT_infos_print,
-gp_keymaps.GPREFINE_OT_delete_last_stroke,
+# gp_keymaps.GPREFINE_OT_delete_last_stroke,
 )
 
 
