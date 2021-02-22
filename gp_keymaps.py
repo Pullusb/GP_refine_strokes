@@ -2,6 +2,8 @@ import bpy
 from bpy.types import Operator
 from .gpfunc import delete_last_stroke
 
+# Unused (replaced on shortcut alt+X by gp.backward_stroke_delete )
+""" 
 class GPREFINE_OT_delete_last_stroke(bpy.types.Operator):
     bl_idname = "gp.delete_last_stroke"
     bl_label = "Delete last GP strokes"
@@ -18,8 +20,7 @@ class GPREFINE_OT_delete_last_stroke(bpy.types.Operator):
             self.report({mess[0]}, mess[1])
             return {"CANCELLED"}
         return {"FINISHED"}
-
-
+ """
 
 class GPREFINE_OT_stroke_eraser(bpy.types.Operator):
     bl_idname = "wm.stroke_eraser"
@@ -162,8 +163,8 @@ def register_keymaps():
 
     ## Set origin to cursor/geometry with ctrl+shift+alt+ extra mousebutton
     km = addon.keymaps.new(name = "3D View", space_type = "VIEW_3D")# Grease Pencil # Grease Pencil Stroke Paint
-    kmi = km.keymap_items.new("gp.delete_last_stroke", type = 'X', value = "PRESS", ctrl = False, shift = False, alt = True)
-    # kmi.properties.type = 'ORIGIN_GEOMETRY'
+    kmi = km.keymap_items.new("gp.backward_stroke_delete", type = 'X', value = "PRESS", alt = True)
+    kmi.properties.forward = False
 
     addon_keymaps.append((km, kmi))
 
@@ -209,23 +210,21 @@ def unregister_keymaps():
 
 
 classes = (
-GPREFINE_OT_delete_last_stroke,
+# GPREFINE_OT_delete_last_stroke,
 # GPREFINE_OT_stroke_eraser,
 )
 
 def register():
     if not bpy.app.background:
-        for cls in classes:
-            bpy.utils.register_class(cls)
-
+        # for cls in classes:
+        #     bpy.utils.register_class(cls)
         register_keymaps() 
 
 def unregister():
     if not bpy.app.background:
         unregister_keymaps()
-    
-        for cls in reversed(classes):
-            bpy.utils.unregister_class(cls)
+        # for cls in reversed(classes):
+        #     bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()

@@ -1,5 +1,6 @@
 import bpy
 import mathutils
+from mathutils import Vector
 import math
 import numpy as np
 
@@ -77,7 +78,7 @@ def vector_len_from_coord(a, b):
     Get two points (that has coordinate 'co' attribute) or Vectors (2D or 3D)
     Return length as float
     '''
-    from mathutils import Vector    
+    from mathutils import Vector
     if type(a) is Vector:
         return (a - b).length
     else:   
@@ -170,3 +171,24 @@ def get_angle_from_points(a, b, c):
 def get_angle(v0, v1):
     '''get two vector, return signed angle in degree'''
     return np.degrees( np.math.atan2(np.linalg.det([v0,v1]),np.dot(v0,v1)) )
+
+
+def get_ninety_angle_from(a, b):
+    '''Get angle from horizon bewteen 0 (->) and 90
+    up      : -90
+    horizon : 0
+    down    : 90
+    '''
+    H = Vector((1,0))
+    #res = degrees( H.angle(b-a) )
+    V = b-a
+    if V == Vector((0,0)):
+        return
+    angle = H.angle_signed(b-a)
+    res = math.degrees(angle)
+    
+    if res > 90:
+        res = res - 180
+    if res < -90:
+        res = res + 180
+    return res

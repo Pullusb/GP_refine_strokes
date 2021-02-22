@@ -24,7 +24,32 @@ This is based on three level : Layer > Frame > Stroke. Be carefull with the targ
 
 If you tick `Target last in paint mode`, the target scope is overrided during draw mode and only last stroke is affected.
 
+
+## Selectors
+
+
+**Select backward/forward**  
+Select strokes from the start or end of the stack in active frame  
+![backward select](https://github.com/Pullusb/images_repo/raw/master/gprs_backward_select.gif)
+
+**Select by length**  
+Select stroke in active frame that are shorter than given length.  
+Hint: you can discard single points (considered 0 length strokes) in the redo panel  
+![backward select](https://github.com/Pullusb/images_repo/raw/master/gprs_select_by_length.gif)
+
+**Select by angle**  
+F9 to access angle tolerance tweaking via redo panel  
+![angle based selection](https://github.com/Pullusb/images_repo/raw/master/GPR_select_by_angle.gif)
+
+**Select hatching**  
+Select lines with specific angle. Reference angle can be set with a selected stroke  
+![angle based selection](https://github.com/Pullusb/images_repo/raw/master/gprs_hatching_selector.gif)
+
 ### Stroke refine
+
+**Strokes Delete**  
+Delete strokes from the start or end of the stack in active frame  
+![backward select](https://github.com/Pullusb/images_repo/raw/master/gprs_backward_delete.gif)
 
 **Trim start/end**  (only work on last stroke)  
 each call erase starting/ending point. usefull to adjust when stroke has gone too far  
@@ -49,18 +74,10 @@ Tranform into average circle
 shift+click to reset infuence to 100%
 ctrl+click for homogen pressure
 
-
-**select by angle** : F9 to access angle tolerance tweaking
-![angle based selection](https://github.com/Pullusb/images_repo/raw/master/GPR_select_by_angle.gif)
-
-**select by length** : Select stroke in active frame that are shorter than given length.  
-Hint: you can discard single points (considered 0 length strokes) in the redo panel
-
-
 **polygonize**  
 Like the straighten above but by splitting on angles between point, user can manage angle tolerance.  
 ![polygonize](https://github.com/Pullusb/images_repo/raw/master/GPR_polygonise.gif)  
-  
+
 ### Thickness and opacity
 
 Modify the points attributes _pressure_ or _strength_ for targeted strokes (uses filter)  
@@ -89,7 +106,10 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 
 ## keymaps
 
-**Alt + X** (GP draw mode only) delete last stroke of current active layer and frame (the last you traced), Hack to replce Ctrl+Z when too slow because cause of heavy scene.
+**Alt + X**  
+Bind `Strokes Delete` (see upper) to this shortcut
+Allow to delete quickly the last bunch of strokes in active layer > frame  
+an infinite `Ctrl+Z` ;)
 
 ---
 
@@ -106,6 +126,13 @@ Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessa
 
 ## Changelog:
 
+0.5.0 - 2021-02-22:
+
+- UI: sort by actions, added a `Selections` category dedicated to these operations
+- feat: backward/forward select/deselect with options in redo panel
+- feat: Stroke deleter (binded on shortcut `alt+X`)
+- feat: hatching selector
+- Code refactor
 
 0.4.3 - 2021-02-07:
 

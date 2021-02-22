@@ -2,11 +2,12 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refine",
 "author": "Samuel Bernou",
-"version": (0, 4, 3),
+"version": (0, 5, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
-"warning": "Wip, some feature are still experimental (auto-join and stroke-fade)",
+"warning": "Some feature are experimental",
 "doc_url": "https://github.com/Pullusb/GP_refine_strokes",
+"tracker_url": "https://github.com/Pullusb/GP_refine_strokes/issues",
 "category": "3D View"
 }
 
@@ -18,8 +19,9 @@ import re, fnmatch, glob
 from mathutils import Vector, Matrix
 from math import radians, degrees
 
-from . import addon_updater_ops# updater
-
+from . import addon_updater_ops # updater
+from . import gp_selector
+from . import ui
 ## addon basic import shortcuts for class types and props
 from bpy.props import (IntProperty,
                         StringProperty,
@@ -145,87 +147,6 @@ class GPREFINE_OT_to_circle_shape(Operator):
         # if event.ctrl:
         #     self.homogen_pressure = True
         return self.execute(context)
-
-class GPREFINE_OT_select_by_angle(Operator):
-    bl_idname = "gp.select_by_angle"
-    bl_label = "Select by angle"
-    bl_description = "Select points base on the deviation angle compare to previous and next point (screen space)"#base on layer/frame/strokes filters
-    bl_options = {"REGISTER", "UNDO"}
-
-    angle_tolerance : bpy.props.FloatProperty(name="Angle limit", description="Select points by angle of stroke around it", 
-    default=40, min=1, max=179, step=2, precision=1, subtype='NONE', unit='NONE')#ANGLE
-
-    reduce : bpy.props.BoolProperty(name="Reduce", description="If multiple points are selected reduce to one by chunck", 
-    default=False)
-    
-    invert : bpy.props.BoolProperty(name="Invert", description="Invert the selection", 
-    default=False)
-    
-    def execute(self, context):
-        pref = context.scene.gprsettings
-        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        if context.mode == 'PAINT_GPENCIL':# and pref.use_context:
-            return {"CANCELLED"}#disable this one in Paint context
-
-        if self.reduce:
-            gp_select_by_angle_reducted(self.angle_tolerance, invert=self.invert)
-        else:
-            gp_select_by_angle(self.angle_tolerance, invert=self.invert)
-        return {"FINISHED"}
-    
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "angle_tolerance")
-        layout.prop(self, "reduce")
-        layout.prop(self, "invert")
-
-
-class GPREFINE_OT_select_by_length(Operator):
-    bl_idname = "gp.select_by_length"
-    bl_label = "Select by length"
-    bl_description = "Select stroke by 3D length (must be in edit mode)"#base on layer/frame/strokes filters
-    bl_options = {"REGISTER", "UNDO"}
-
-    @classmethod
-    def poll(cls, context):
-        return context.object and context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL')
-
-    length : bpy.props.FloatProperty(name="Length", description="Length tolerance", 
-    default=0.010, min=0.0, max=1000, step=0.1, precision=4)
-
-    include_single_points : bpy.props.BoolProperty(name='Include single points',
-    description="Include single points (0 length) in the selection", default=True)
-    
-    # self.shift : bpy.props.BoolProperty()
-
-    def invoke(self, context, event):
-        self.length = context.scene.gprsettings.length
-        self.shift = event.shift
-        return self.execute(context)
-
-    def execute(self, context):
-        # pref = context.scene.gprsettings
-        # L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        
-        # if not context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL'):# and pref.use_context:
-        #     return {"CANCELLED"}#disable this one in Paint context
-
-        ## select stroke based on 3D length
-        for l in context.object.data.layers:
-            if l.lock or l.hide:
-                continue
-            for s in l.active_frame.strokes:
-                if len(s.points) == 1:
-                    s.select = self.include_single_points
-                    continue
-                s.select = get_stroke_length(s) <= self.length
-
-        return {"FINISHED"}
-    
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "length")
-        layout.prop(self, "include_single_points")
 
 class GPREFINE_OT_polygonize(Operator):
     bl_idname = "gp.polygonize_stroke"
@@ -356,175 +277,6 @@ class GPREFINE_OT_refine_ops(Operator):
         return {"FINISHED"}
 
 
-### PANELS ----
-
-#generic class attribute and poll for following panels
-class GPR_refine:
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Gpencil"
-
-    # @classmethod
-    # def poll(cls, context):
-    #     return (context.object is not None and context.object.type == 'GPENCIL')
-
-class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
-    bl_label = "Strokes refine"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True#send properties to the right side
-
-        # flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
-        layout.prop(context.scene.gprsettings, 'layer_tgt')
-        layout.prop(context.scene.gprsettings, 'frame_tgt')
-        layout.prop(context.scene.gprsettings, 'stroke_tgt')
-        layout.prop(context.scene.gprsettings, 'use_context')
-        # row = layout.row(align=False)
-        #row = layout.split(align=True,percentage=0.5)
-        # row.label(text='arrow choice')
-
-class GPREFINE_PT_thin_tips(GPR_refine, Panel):
-    bl_label = "Thin stroke tips"#"Strokes filters"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        # row = layout.row()
-        layout.prop(context.scene.gprsettings, 'percentage_use_sync_tip_len')
-        layout = self.layout
-        if context.scene.gprsettings.percentage_use_sync_tip_len:
-            layout.prop(context.scene.gprsettings, 'percentage_tip_len')
-        else:
-            layout.prop(context.scene.gprsettings, 'percentage_start_tip_len')
-            layout.prop(context.scene.gprsettings, 'percentage_end_tip_len')
-        layout.prop(context.scene.gprsettings, 'force_max_pressure_line_body')
-        layout.operator('gp.refine_strokes').action = 'THIN_RELATIVE'#, icon='GREASEPENCIL'
-        layout.label(text="Those settings only affect additive or eraser mode")
-
-class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
-    bl_label = "Thickness and opacity"#"Strokes filters"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    # bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'add_line_width')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_WIDTH'# Sub line_width
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_WIDTH'# Add line_width
-
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'set_line_width')
-        row.operator('gp.refine_strokes', text='Set line width').action = 'SET_LINE_WIDTH'
-
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'add_hardness')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_HARDNESS'# Sub line_width
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_HARDNESS'# Add line_width
-
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'set_hardness')
-        row.operator('gp.refine_strokes', text='Set hardness').action = 'SET_HARDNESS'
-
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'add_pressure')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_PRESSURE'# Sub pressure
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_PRESSURE'# Add pressure
-        
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'set_pressure')
-        row.operator('gp.refine_strokes', text='Set pressure').action = 'SET_PRESSURE'#, icon='GREASEPENCIL'
-        
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'add_strength')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_STRENGTH'# Sub strength
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_STRENGTH'# Add strength
-        
-        row = layout.row()
-        row.prop(context.scene.gprsettings, 'set_strength')
-        row.operator('gp.refine_strokes', text='Set strength').action = 'SET_STRENGTH'#, icon='GREASEPENCIL'
-
-class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
-    bl_label = "Stroke reshape"#"Strokes filters"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    # bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        # layout.use_property_split = True
-        
-        ## stroke trimming
-        row = layout.row()
-        row.operator('gp.refine_strokes', text='Trim start', icon='TRACKING_CLEAR_FORWARDS').action = 'TRIM_START'
-        row.operator('gp.refine_strokes', text='Trim end', icon='TRACKING_CLEAR_BACKWARDS').action = 'TRIM_END'
-        layout.separator()
-        
-        ## Shaping
-        row = layout.row()
-        row.operator('gp.straighten_stroke', text='Straighten', icon='CURVE_PATH')
-        row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
-        
-        row = layout.row()
-        row.operator('gp.to_circle_shape', text='To Circle', icon='MESH_CIRCLE')
-        
-        row = layout.row()
-        row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
-        row.operator('gp.polygonize_stroke', icon='LINCURVE')
-
-        # layout.separator()
-        row = layout.row(align=True)
-        row.prop(context.scene.gprsettings, 'length')
-        row.operator('gp.select_by_length', text='Select', icon='DRIVER_DISTANCE')
-        
-        # row.operator('gp.refine_strokes', text='Polygonize', icon='IPO_CONSTANT').action = 'POLYGONIZE'#generic polygonize
-        
-        layout.separator()
-        ## experimental Auto join will come back when fixed
-        layout = self.layout
-        # layout.label(text='Stroke join')
-        layout.prop(context.scene.gprsettings, 'start_point_tolerance')
-        layout.prop(context.scene.gprsettings, 'proximity_tolerance')
-        layout.operator('gp.refine_strokes', text='Auto join', icon='CON_TRACKTO').action = 'GUESS_JOIN'
-
-        # straigthten line should be a separate operator with influence value... (fully straight lines are boring)
-        addon_updater_ops.check_for_update_background()# updater
-        addon_updater_ops.update_notice_box_ui(self, context)# updater
-
-
-class GPREFINE_PT_resampling(GPR_refine, Panel):
-    bl_label = "Resampling Presets"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        # layout.use_property_split = True
-
-        ## resampling preset
-        col = layout.column(align=True)
-        for i, val in enumerate((0.002, 0.004, 0.006, 0.008, 0.01, 0.015, 0.02, 0.03)):
-            if i % 4 == 0:
-                row = col.row(align=True)
-            row.operator('gpencil.stroke_sample', text = str(val) ).length = val
-        layout.operator('gpencil.stroke_simplify').factor = 0.002
-        layout.operator('gpencil.stroke_subdivide')
-
-class GPREFINE_PT_infos_print(GPR_refine, Panel):
-    bl_label = "Infos"#"Strokes filters"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.operator('gp.refine_strokes', text='Print points infos').action = 'POINTS_INFOS'
-
-
 ### -- PROPERTIES --
 
 class GPR_refine_prop(PropertyGroup):
@@ -633,6 +385,12 @@ class GPR_refine_prop(PropertyGroup):
     length : bpy.props.FloatProperty(name="Length", description="Length tolerance", 
     default=0.010, min=0.0, max=1000, step=0.1, precision=4, options={'HIDDEN'})
 
+    ## hatching settings
+    ref_angle : bpy.props.IntProperty(name='Reference Angle', default=-45, 
+    description='Reference angle to match from -90 to 90\ne.g: / = -70, \ = 70, -- = 0')
+
+    
+
 
 
 ## updater
@@ -685,34 +443,29 @@ GPR_refine_prop,
 GPREFINE_OT_refine_ops,
 GPREFINE_OT_straighten_stroke,
 GPREFINE_OT_to_circle_shape,
-GPREFINE_OT_select_by_angle,
 GPREFINE_OT_polygonize,
-GPREFINE_OT_select_by_length,
-GPREFINE_PT_stroke_refine_panel,#main panel
-GPREFINE_PT_stroke_shape_refine,
-GPREFINE_PT_thickness_opacity,
-GPREFINE_PT_resampling,
-GPREFINE_PT_thin_tips,
-# GPREFINE_PT_infos_print,
-# gp_keymaps.GPREFINE_OT_delete_last_stroke,
 )
 
 
 def register():
     addon_updater_ops.register(bl_info)# updater
-    from bpy.utils import register_class
     for cls in classes:
-        register_class(cls)
-    gp_keymaps.register()#keymaps
+        bpy.utils.register_class(cls)
     bpy.types.Scene.gprsettings = PointerProperty(type = GPR_refine_prop)
+    gp_selector.register()
+    ui.register()
+
+    gp_keymaps.register()#keymaps
 
 def unregister():
     addon_updater_ops.unregister()# updater
     del bpy.types.Scene.gprsettings
     gp_keymaps.unregister()#keymaps
-    from bpy.utils import unregister_class
+
+    ui.unregister()
+    gp_selector.unregister()
     for cls in reversed(classes):
-        unregister_class(cls)
+        bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()
