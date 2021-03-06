@@ -4,7 +4,7 @@ from . import utils
 from . import gpfunc
 from mathutils import Vector, Matrix
 from math import radians, degrees, copysign, isclose
-
+import numpy as np
 from bpy.props import (IntProperty,
                         StringProperty,
                         BoolProperty,
@@ -441,6 +441,146 @@ class GPREFINE_OT_backward_stroke_delete(Operator):
         layout.prop(self, "forward")
 
 
+class GPREFINE_OT_attribute_selector(Operator):
+    bl_idname = "gp.attribute_selector"
+    bl_label = "Attribute Threshold Selector"
+    bl_description = "Select strokes with a threshold of average points individual attribute (default: pressure)\nTweak settings in redo panel"
+    bl_options = {"REGISTER", "UNDO"}
+
+    attr_threshold: bpy.props.FloatProperty(
+    name="Attribute threshold", description="Select Strokes/points when pressure is below this threshold", default=0.45,
+    min=0.0, max=1.0, step=1, precision=2) #, options={'SKIP_SAVE'}
+
+    attribute: bpy.props.EnumProperty(
+        name="Attribute", description="Choose points attribute to use as reference for the selection", 
+        default='pressure', #options={'HIDDEN'},
+        items=(
+            ('pressure', 'Pressure', 'Use point pressure', 0),
+            ('strength', 'Strength', 'Use point strength', 1),
+            ))
+    
+    # optional TODO : line width and hardness ? (complicate because not at point level)
+
+    on_points: bpy.props.BoolProperty(name="Individual Points", default=False,
+    description='Select individual points instead of strokes')
+    
+    greater: bpy.props.BoolProperty(name="Greater", default=False,
+    description='Select if value is equal or above threshold, else select if value is below')
+
+    method: bpy.props.EnumProperty(
+        name="Method", description="Choose method to compares points in strokes with given threshold", 
+        default='MEAN', #options={'HIDDEN'},
+        items=(
+            ('MEAN', 'Mean', 'Use a Mean of all points in each stroke to compare with threshold', 0),
+            ('MEDIAN', 'Median', 'Use a Median of all points in each stroke to compare with threshold', 1),
+            ('MIN', 'Min', 'Use the minimal point value in each stroke to compare with threshold', 2),
+            ('MAX', 'Max', 'Use the maximal point value in each stroke to compare with threshold', 3),
+            ))
+    
+    replace_selection: bpy.props.BoolProperty(
+        name="Replace Selection", default=True,
+        description='Replace instead of additive selection')
+    
+    use_target_filter: bpy.props.BoolProperty(
+        name="Use Stroke Targets Filter", default=False,
+        description='Use GP refine stroke dedicated filter (layer > frame > stroke)\nElse use only active frame of active layer')
+
+
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.object.type == 'GPENCIL'
+
+    def invoke(self, context, event):
+        self.frame = active_frame_validity_check(context)
+        if isinstance(self.frame, str):
+            self.report({'ERROR'}, self.frame)
+            return {"CANCELLED"}
+
+        return self.execute(context)
+
+    def execute(self, context):
+        ## prepare list and index
+        f = context.object.data.layers.active.active_frame
+        
+        if self.use_target_filter:
+            pref = context.scene.gprsettings
+            L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+            strokelist = gpfunc.strokelist(t_layer=L, t_frame=F, t_stroke=S)
+        else:
+            strokelist = [s for s in f.strokes]
+
+        if self.on_points:
+            for s in strokelist:
+                for p in s.points:
+                    if self.replace_selection:
+                        p.select = (getattr(p, self.attribute) < self.attr_threshold) ^ self.greater
+                        continue
+                    if (getattr(p, self.attribute) < self.attr_threshold) ^ self.greater:
+                        p.select = True
+            return {"FINISHED"}
+
+        if self.method == 'MEAN': # average
+            comp_func = np.mean
+        elif self.method == 'MEDIAN':
+            comp_func = np.median
+        elif self.method == 'MIN':
+            comp_func = np.min
+        elif self.method == 'MAX':
+            comp_func = np.max
+
+        for s in strokelist:
+            stroke_pressure = comp_func([getattr(p, self.attribute) for p in s.points])
+            if self.replace_selection:
+                s.select = (stroke_pressure < self.attr_threshold) ^ self.greater
+                continue
+
+            if (stroke_pressure < self.attr_threshold) ^ self.greater:
+                s.select = True
+
+        return {"FINISHED"}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = False
+        
+        ## Not on same line because redo panel isn't large enough
+        layout.label(text='Point' if self.on_points else 'Stroke')
+
+        flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
+        row = flow.row()
+
+        if not self.on_points:
+            row.prop(self, "method", text='')
+
+        row.prop(self, "attribute", text='')
+
+        compare = '>=' if self.greater else '<'
+        row.prop(self, "greater", text=compare, toggle=1)
+        # row.label(text=compare)        
+
+        row.prop(self, "attr_threshold", text='')
+
+        ## back to layout
+        # flow.prop(self, "greater")
+        col = layout.column()
+        col.prop(self, "on_points", text='Individual Points')
+
+        # col_method = layout.column()
+        # col_method.prop(self, "method")
+        # col_method.enabled=not self.on_points
+        
+        col = layout.column()
+        col.prop(self, "use_target_filter")
+        col.prop(self, "replace_selection")
+        
+        #-# Basic 
+        # layout.prop(self, "attr_threshold")
+        # layout.prop(self, "greater")
+        # layout.prop(self, "attribute")
+        # layout.prop(self, "method")
+        # layout.prop(self, "on_points")
+        # layout.prop(self, "replace_selection")
+
 
 classes = (
     GPREFINE_OT_select_by_angle,
@@ -449,6 +589,7 @@ classes = (
     GPREFINE_OT_backward_stroke_delete,
     GPREFINE_OT_hatching_selector,
     GPREFINE_OT_set_angle_from_stroke,
+    GPREFINE_OT_attribute_selector,
 )
 
 

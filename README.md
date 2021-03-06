@@ -5,8 +5,6 @@ Blender addon - Bunch of functions for post-drawing strokes refine
 
 <!-- ### [Demo Youtube]() -->
 
-### /!\ WIP : some features are still experimental
-
 ---  
 
 ### Where ?
@@ -25,8 +23,7 @@ This is based on three level : Layer > Frame > Stroke. Be carefull with the targ
 If you tick `Target last in paint mode`, the target scope is overrided during draw mode and only last stroke is affected.
 
 
-## Selectors
-
+### Selectors
 
 **Select backward/forward**  
 Select strokes from the start or end of the stack in active frame  
@@ -44,6 +41,11 @@ F9 to access angle tolerance tweaking via redo panel
 **Select hatching**  
 Select lines with specific angle. Reference angle can be set with a selected stroke  
 ![angle based selection](https://github.com/Pullusb/images_repo/raw/master/gprs_hatching_selector.gif)
+
+**Select attribute threshold**  
+Select strokes or points if attribute (pressure, opacity) is below or above a given threshold  
+All the tweaking and options are available in the F9 redo panel  
+![select by attribute](https://github.com/Pullusb/images_repo/raw/master/GPR_select_by_attribute_threshold.gif)
 
 ### Stroke refine
 
@@ -125,6 +127,12 @@ an infinite `Ctrl+Z` ;)
 ---
 
 ## Changelog:
+
+0.6.0 - 2021-03-06:
+
+- feat: new select by attribute threshold (value and multiple options in redo panel)
+- ui: added auto-join strokes in a dedicated subpanel (this feature is still experimental and was confounded with the rest)
+- code: little cleaning
 
 0.5.0 - 2021-02-22:
 

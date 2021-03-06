@@ -1,28 +1,23 @@
 bl_info = {
 "name": "Gpencil refine strokes",
-"description": "Bunch of functions for post drawing strokes refine",
+"description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (0, 5, 0),
+"version": (0, 6, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
-"warning": "Some feature are experimental",
+"warning": "",
 "doc_url": "https://github.com/Pullusb/GP_refine_strokes",
 "tracker_url": "https://github.com/Pullusb/GP_refine_strokes/issues",
 "category": "3D View"
 }
 
 import bpy
-import os
-from os import listdir
-from os.path import join, dirname, basename, exists, isfile, isdir, splitext
-import re, fnmatch, glob
-from mathutils import Vector, Matrix
-from math import radians, degrees
 
 from . import addon_updater_ops # updater
 from . import gp_selector
 from . import ui
-## addon basic import shortcuts for class types and props
+
+
 from bpy.props import (IntProperty,
                         StringProperty,
                         BoolProperty,
@@ -394,7 +389,7 @@ class GPR_refine_prop(PropertyGroup):
 
 
 ## updater
-class GPR_addonprefs(bpy.types.AddonPreferences):
+class GPR_addonprefs(AddonPreferences):
     bl_idname = __name__
     
     auto_check_update : bpy.props.BoolProperty(

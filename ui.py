@@ -18,16 +18,16 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.use_property_split = True#send properties to the right side
+        layout.use_property_split = True # send properties to the right side
 
-        # flow = layout.grid_flow(row_major=True, columns=0, even_columns=True, even_rows=False, align=False)
         layout.prop(context.scene.gprsettings, 'layer_tgt')
         layout.prop(context.scene.gprsettings, 'frame_tgt')
         layout.prop(context.scene.gprsettings, 'stroke_tgt')
         layout.prop(context.scene.gprsettings, 'use_context')
-        # row = layout.row(align=False)
-        #row = layout.split(align=True,percentage=0.5)
-        # row.label(text='arrow choice')
+        
+        #-# Updater
+        addon_updater_ops.check_for_update_background()# updater
+        addon_updater_ops.update_notice_box_ui(self, context)# updater
 
 class GPREFINE_PT_thin_tips(GPR_refine, Panel):
     bl_label = "Thin stroke tips"#"Strokes filters"
@@ -66,13 +66,16 @@ class GPREFINE_PT_Selector(GPR_refine, Panel):
         row = layout.row(align=True)
         row.prop(context.scene.gprsettings, 'length')
         row.operator('gp.select_by_length', text='Select', icon='DRIVER_DISTANCE')
-        
-        row = layout.row(align=True)
+
+        col = layout.column(align=True)        
+        row = col.row(align=True)
 
         row.prop(context.scene.gprsettings, 'ref_angle', text='Angle', icon='DRIVER_ROTATIONAL_DIFFERENCE')
         row.operator('gp.hatching_selector', icon='OUTLINER_DATA_LIGHTPROBE').ref_angle = context.scene.gprsettings.ref_angle
-        layout.operator('gp.set_angle_from_stroke')
+        col.operator('gp.set_angle_from_stroke')
         
+        layout.operator('gp.attribute_selector')
+
         layout.label(text='Points:')
         row = layout.row()
         row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
@@ -154,20 +157,21 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
         # row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
         row.operator('gp.polygonize_stroke', icon='LINCURVE')
         
-        # row.operator('gp.refine_strokes', text='Polygonize', icon='IPO_CONSTANT').action = 'POLYGONIZE'#generic polygonize
-        
-        layout.separator()
-        ## experimental Auto join will come back when fixed
+        # row.operator('gp.refine_strokes', text='Polygonize', icon='IPO_CONSTANT').action = 'POLYGONIZE' # generic polygonize
+
+class GPREFINE_PT_auto_join(GPR_refine, Panel):
+    bl_label = "Join Strokes"
+    bl_parent_id = "GPREFINE_PT_stroke_refine_panel" # GPREFINE_PT_stroke_shape_refine subpanel of a subpanel
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
         layout = self.layout
-        # layout.label(text='Stroke join')
+        #-# (still )experimental Auto join
+        # layout.use_property_split = True
+        # layout.label(text='Auto-join:')
         layout.prop(context.scene.gprsettings, 'start_point_tolerance')
         layout.prop(context.scene.gprsettings, 'proximity_tolerance')
         layout.operator('gp.refine_strokes', text='Auto join', icon='CON_TRACKTO').action = 'GUESS_JOIN'
-
-        # straigthten line should be a separate operator with influence value... (fully straight lines are boring)
-        addon_updater_ops.check_for_update_background()# updater
-        addon_updater_ops.update_notice_box_ui(self, context)# updater
-
 
 class GPREFINE_PT_resampling(GPR_refine, Panel):
     bl_label = "Resampling Presets"
@@ -205,6 +209,7 @@ GPREFINE_PT_stroke_shape_refine,
 GPREFINE_PT_thickness_opacity,
 GPREFINE_PT_resampling,
 GPREFINE_PT_thin_tips,
+GPREFINE_PT_auto_join,
 # GPREFINE_PT_infos_print,
 )
 

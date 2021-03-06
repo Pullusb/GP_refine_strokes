@@ -4,7 +4,6 @@ import mathutils
 from mathutils import Vector
 from math import acos, degrees
 import numpy as np
-import json
 
 ### -- GET STROKES FILTERS --
 
