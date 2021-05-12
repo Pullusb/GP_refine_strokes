@@ -101,12 +101,12 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
 
         row = layout.row()
         row.prop(context.scene.gprsettings, 'add_hardness')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_HARDNESS'# Sub line_width
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_HARDNESS'# Add line_width
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_HARDNESS'# Sub line_width
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_HARDNESS'# Add line_width
 
         row = layout.row()
         row.prop(context.scene.gprsettings, 'set_hardness')
-        row.operator('gp.refine_strokes', text='Set hardness').action = 'SET_HARDNESS'
+        row.operator('gp.refine_strokes', text='Set hardness').action = 'SET_LINE_HARDNESS'
 
         row = layout.row()
         row.prop(context.scene.gprsettings, 'add_pressure')
