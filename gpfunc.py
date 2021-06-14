@@ -239,9 +239,56 @@ def reshape_abs_thinner_tip_percentage(s, tip_len=10, variance=0):
 
 def info_pressure(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT'):
     '''print the pressure of targeted strokes'''
-    print('Pressure per stroke')
+    print('\nPressure list:')
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         print(['{:.3f}'.format(p.pressure) for p in s.points])
+
+
+s_attrs = [
+'line_width',
+'hardness',
+'material_index',
+'uv_scale',
+'draw_cyclic',
+'aspect',
+'display_mode',
+]
+# all stroke dir: ['bound_box_max', 'bound_box_min', 'display_mode', 'draw_cyclic', 'end_cap_mode', 'groups', 'hardness', 'is_nofill_stroke', 'line_width', 'material_index', 'points', 'select', 'start_cap_mode', 'triangles', 'uv_rotation', 'uv_scale', 'uv_translation', 'vertex_color_fill']
+
+p_attrs = ['co', 
+'pressure', 
+'strength', 
+'uv_factor', 
+'uv_rotation', 
+]
+
+def inspect_points(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_infos=False):
+    '''print full points infos of targeted strokes'''
+    print('\nPoint infos:')
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        if s.select:
+            # print(l.info)
+            if all_infos:
+                for at in s_attrs:
+                    print(f' {at} : {getattr(s, at)}')
+            for i, p in enumerate(s.points):
+                if p.select:
+                    print(f'  [{i}]')
+                    for pat in p_attrs:
+                        print(f'   {pat} : {getattr(p, pat)}') 
+
+def inspect_strokes(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_infos=False):
+    '''print full points infos of targeted strokes'''
+    print('\nStrokes infos:')
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        if s.select:
+            # print(l.info)
+            for at in s_attrs:
+                if not hasattr(s, at):
+                    continue  
+                print(f'  {at} : {getattr(s, at)}')
+            print(f'   points : {len(s.points)}')
+            print(f'   length : {get_stroke_length(s)}')
 
 def thin_stroke_tips(tip_len=5, middle=0, t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT'):
     '''Thin tips of strokes on target layers/frames/strokes defaut (active layer > active frame > selected strokes)'''

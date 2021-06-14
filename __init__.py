@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (0, 6, 1),
+"version": (0, 7, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -44,6 +44,25 @@ from .import gp_keymaps
 
 ### -- OPERATOR --
 
+def get_context_scope(context=None):
+    if not context:
+        context = bpy.context
+    pref = context.scene.gprsettings
+    L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+    if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+        L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+
+    if context.mode != 'PAINT_GPENCIL' and pref.use_select:
+        L, F, S = 'ALL', 'ACTIVE', 'SELECT'
+        ob = context.object
+        if ob and ob.type == 'GPENCIL':
+            if ob.data.use_multiedit:
+                # consider multiframe scope
+                L, F, S = 'ALL', 'SELECT', 'SELECT'
+    
+    return L, F, S
+    
+
 class GPREFINE_OT_straighten_stroke(Operator):
     bl_idname = "gp.straighten_stroke"
     bl_label = "Straight stroke"
@@ -61,10 +80,7 @@ class GPREFINE_OT_straighten_stroke(Operator):
 
     def execute(self, context):
         pref = context.scene.gprsettings
-        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
-            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
-            #get_last_stroke(context)
+        L, F, S = get_context_scope(context)
         
         for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
             to_straight_line(s, keep_points=True, influence = self.influence_val, straight_pressure = self.homogen_pressure)
@@ -108,9 +124,7 @@ class GPREFINE_OT_to_circle_shape(Operator):
     def execute(self, context):
         #base on layer/frame/strokes filters -> filter point inside operator
         pref = context.scene.gprsettings
-        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
-            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+        L, F, S = get_context_scope(context)
 
         if self.individual_strokes or context.mode == 'PAINT_GPENCIL':#all strokes individually
             for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
@@ -163,10 +177,7 @@ class GPREFINE_OT_polygonize(Operator):
     default=False)
     
     def execute(self, context):
-        pref = context.scene.gprsettings
-        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
-            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+        L, F, S = get_context_scope(context)
 
         for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
             gp_polygonize(s, tol=self.angle_tolerance, influence=self.influence_val, reduce=self.reduce, delete=self.delete)
@@ -192,11 +203,13 @@ class GPREFINE_OT_refine_ops(Operator):
 
     action : StringProperty(name="Action", description="Action to do", default="REFINE", maxlen=0)
 
+    def invoke(self, context, event):
+        self.shift = event.shift
+        return self.execute(context)
+
     def execute(self, context):
         pref = context.scene.gprsettings
-        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
-            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+        L, F, S = get_context_scope(context)
 
         err = None
         ## thinning
@@ -263,8 +276,12 @@ class GPREFINE_OT_refine_ops(Operator):
         #     gp_polygonize(pref.poly_angle_tolerance)
 
         ## -- Infos
-        if self.action == "POINTS_INFOS":
-            info_pressure(t_layer=L, t_frame=F, t_stroke=S)#t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT')
+        if self.action == "INSPECT_STROKES":
+            inspect_strokes(t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "INSPECT_POINTS":
+            inspect_points(t_layer=L, t_frame=F, t_stroke=S, all_infos=self.shift)
+        if self.action == "POINTS_PRESSURE_INFOS":
+            info_pressure(t_layer=L, t_frame=F, t_stroke=S)
 
         if err is not None:
             self.report({'ERROR'}, err)
@@ -306,11 +323,15 @@ class GPR_refine_prop(PropertyGroup):
         )
     )
 
-    use_context : BoolProperty(name="Target last in paint mode", options={'HIDDEN'},
+    use_context : BoolProperty(name="Use last in paint mode", options={'HIDDEN'},
     description="Change target according to context.\nIn paint mode target last stroke only, (force 'ACTIVE', 'ACTIVE', 'LAST')", 
     default=True)
+    
+    use_select : BoolProperty(name="Use Selection", options={'HIDDEN'},
+    description="Use only context selection as target in edit and sculpt mode (force 'ALL', 'ACTIVE', 'SELECT')", 
+    default=True)
+    
     ## Tip thinner
-
     percentage_use_sync_tip_len : BoolProperty(name="Sync tip fade", options={'HIDDEN'},
     description="Same tip fade start and end percentage", 
     default=True)
@@ -362,7 +383,6 @@ class GPR_refine_prop(PropertyGroup):
     default=0.1, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
     
     # auto join
-    
     proximity_tolerance : FloatProperty(name="Detection radius", description="Proximity tolerance (Relative to view), number of point detected in range printed in console", options={'HIDDEN'}, 
     default=0.01, min=0.00001, max=0.1, soft_min=0.0001, soft_max=0.1, step=3, precision=3)
 
@@ -371,10 +391,8 @@ class GPR_refine_prop(PropertyGroup):
     default=6, min=0, max=25, soft_max=8, step=1,)
 
     # polygonize
-
     poly_angle_tolerance : FloatProperty(name="Angle tolerance", description="Point with corner above this angle will be used as corners", options={'HIDDEN'}, 
     default=45, min=1, max=179, soft_min=5, soft_max=0.1, step=1, precision=1)
-
 
     # length tolerance
     length : bpy.props.FloatProperty(name="Length", description="Length tolerance", 

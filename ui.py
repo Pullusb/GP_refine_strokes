@@ -20,10 +20,16 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
         layout = self.layout
         layout.use_property_split = True # send properties to the right side
 
-        layout.prop(context.scene.gprsettings, 'layer_tgt')
-        layout.prop(context.scene.gprsettings, 'frame_tgt')
-        layout.prop(context.scene.gprsettings, 'stroke_tgt')
-        layout.prop(context.scene.gprsettings, 'use_context')
+        col_filter = layout.column()
+        col_filter.prop(context.scene.gprsettings, 'layer_tgt')
+        col_filter.prop(context.scene.gprsettings, 'frame_tgt')
+        col_filter.prop(context.scene.gprsettings, 'stroke_tgt')
+        
+        col_filter.active = not (context.scene.gprsettings.use_select or (context.scene.gprsettings.use_context and context.mode == 'PAINT_GPENCIL'))
+
+        col_pref = layout.column()
+        col_pref.prop(context.scene.gprsettings, 'use_context')
+        col_pref.prop(context.scene.gprsettings, 'use_select')
         
         #-# Updater
         addon_updater_ops.check_for_update_background()# updater
@@ -191,7 +197,7 @@ class GPREFINE_PT_resampling(GPR_refine, Panel):
         layout.operator('gpencil.stroke_simplify').factor = 0.002
         layout.operator('gpencil.stroke_subdivide')
 
-class GPREFINE_PT_infos_print(GPR_refine, Panel):
+class GPREFINE_PT_analize_gp(GPR_refine, Panel):
     bl_label = "Infos"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
     bl_options = {'DEFAULT_CLOSED'}
@@ -199,7 +205,10 @@ class GPREFINE_PT_infos_print(GPR_refine, Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        layout.operator('gp.refine_strokes', text='Print points infos').action = 'POINTS_INFOS'
+        col = layout.column()
+        col.operator('gp.refine_strokes', text='Print Stroke Infos', icon = 'GP_SELECT_POINTS').action = 'INSPECT_STROKES'
+        col.operator('gp.refine_strokes', text='Print Points Infos', icon = 'SNAP_MIDPOINT').action = 'INSPECT_POINTS'
+        col.operator('gp.refine_strokes', text='List Pressure', icon = 'STYLUS_PRESSURE').action = 'POINTS_PRESSURE_INFOS'
 
 
 classes = (
@@ -210,7 +219,7 @@ GPREFINE_PT_thickness_opacity,
 GPREFINE_PT_resampling,
 GPREFINE_PT_thin_tips,
 GPREFINE_PT_auto_join,
-# GPREFINE_PT_infos_print,
+GPREFINE_PT_analize_gp,
 )
 
 def register():

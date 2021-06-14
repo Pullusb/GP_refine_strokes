@@ -1,6 +1,12 @@
 ## Changelog:
 
 
+0.7.0 - 2021-06-14:
+
+- feat: add context select mode to set target on selection by default.
+- feat: add analyse panel with functions to console print infos on strokes, points and pressure.
+- ui: triple filter is now greyed out if overrided
+
 0.6.1 - 2021-05-12:
 
 - fix : hardness add/sub/set
