@@ -589,6 +589,11 @@ class GPREFINE_OT_coplanar_selector(Operator):
     
     invert : bpy.props.BoolProperty(name="Invert", default=False,
         description='Select Non Coplanar strokes')
+    
+    tolerance : bpy.props.FloatProperty(name="Tolerance", default=0.0002,
+        description="Tolerance to consider points coplanar in a stroke (default: 0.0002)\nValue is a threshold of point distance from detected plane", 
+        min=0.00001, max=10, step=0.01, precision=5, subtype='DISTANCE') # , unit='LENGTH'
+    
     verbose : bpy.props.BoolProperty(name="Verbose", default=False,
         description='Print information in console')
 
@@ -610,7 +615,7 @@ class GPREFINE_OT_coplanar_selector(Operator):
         self.count = len(strokes)
         self.ct = 0
         for s in strokes:
-            s.select = gpfunc.is_coplanar_stroke(s, self.verbose) ^ self.invert
+            s.select = gpfunc.is_coplanar_stroke(s, tol=self.tolerance, verbose=self.verbose) ^ self.invert
             if s.select:
                 self.ct +=1
 
@@ -621,6 +626,7 @@ class GPREFINE_OT_coplanar_selector(Operator):
         target= "non-coplanar" if self.invert else "coplanar"
         layout.label(text=f'{self.ct} {target} selected (/{self.count})')
         layout.prop(self, "invert")
+        layout.prop(self, "tolerance")
         # layout.prop(self, "verbose")
 
 
