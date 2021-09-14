@@ -836,15 +836,14 @@ def to_circle_cast_to_average(ob, point_list, influence = 100, straight_pressure
             p.pressure = p.pressure + ((m_pressure - p.pressure) * (influence / 100))
             # p.pressure = m_pressure #without influence
 
-def is_coplanar_stroke(s, tol=0.0002, verbose=False):
+def is_coplanar_stroke(s, tol=0.0002, verbose=False) -> bool:
     '''
     Get a GP stroke object and tell if all points are coplanar (with a tolerance).
-    return normal vector if coplanar else None
     '''
 
     if len(s.points) < 4:
-        print('less than 4 points')
-        return None#less than 4 points is necessaryly coplanar but not "evaluable" so retrun False
+        # less than 4 points is necessarily coplanar
+        return True 
 
     obj = bpy.context.object
     mat = obj.matrix_world
@@ -853,9 +852,46 @@ def is_coplanar_stroke(s, tol=0.0002, verbose=False):
     b = mat @ s.points[pct//3].co
     c = mat @ s.points[pct//3*2].co
 
-    """ a = s.points[0].co
+    ab = b-a
+    ac = c-a
+
+    # get normal (perpendicular Vector)
+    plane_no = ab.cross(ac)#.normalized()
+
+    for i, p in enumerate(s.points):
+        ## let a tolerance value of at least 0.0002
+        # if abs(geometry.distance_point_to_plane(p.co, a, plane_no)) > tol:
+        if abs(geometry.distance_point_to_plane(mat @ p.co, a, plane_no)) > tol:
+            if verbose:
+                print(f'point{i} is not co-planar') # (distance to plane {geometry.distance_point_to_plane(p.co, a, plane_no)})
+            return False
+    return True
+
+def get_coplanar_stroke_vector(s, tol=0.0002, verbose=False):
+    '''
+    Get a GP stroke object and tell if all points are coplanar (with a tolerance).
+    return normal vector if coplanar else None
+    '''
+
+    if len(s.points) < 4:
+        # less than 4 points is necessarily coplanar
+        # but not "evaluable" so return None
+        if verbose:
+            print('less than 4 points')
+        return
+
+    obj = bpy.context.object
+    mat = obj.matrix_world
+    pct = len(s.points)
+    a = mat @ s.points[0].co
+    b = mat @ s.points[pct//3].co
+    c = mat @ s.points[pct//3*2].co
+
+    """
+    a = s.points[0].co
     b = s.points[1].co
-    c = s.points[-2].co """
+    c = s.points[-2].co
+    """
     ab = b-a
     ac = c-a
 
@@ -865,12 +901,11 @@ def is_coplanar_stroke(s, tol=0.0002, verbose=False):
 
     # print('plane_no: ', plane_no)
     for i, p in enumerate(s.points):
-        #let a tolerance value of at least 0.0002 maybe more
-        """if abs(geometry.distance_point_to_plane(p.co, a, plane_no)) > tol:"""
+        ## let a tolerance value of at least 0.0002 maybe more
+        # if abs(geometry.distance_point_to_plane(p.co, a, plane_no)) > tol:
         if abs(geometry.distance_point_to_plane(mat @ p.co, a, plane_no)) > tol:
             if verbose:
                 print(f'point{i} is not co-planar') # (distance to plane {geometry.distance_point_to_plane(p.co, a, plane_no)})
-            return False
+            return
             # val = None
-    return True
-    # return val
+    return val

@@ -614,8 +614,10 @@ class GPREFINE_OT_coplanar_selector(Operator):
         strokes = context.object.data.layers.active.active_frame.strokes
         self.count = len(strokes)
         self.ct = 0
+        self.problem = 0
         for s in strokes:
-            s.select = gpfunc.is_coplanar_stroke(s, tol=self.tolerance, verbose=self.verbose) ^ self.invert
+            is_coplanar = gpfunc.is_coplanar_stroke(s, tol=self.tolerance, verbose=self.verbose)
+            s.select = is_coplanar ^ self.invert
             if s.select:
                 self.ct +=1
 
