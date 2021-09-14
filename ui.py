@@ -81,6 +81,7 @@ class GPREFINE_PT_Selector(GPR_refine, Panel):
         col.operator('gp.set_angle_from_stroke')
         
         layout.operator('gp.attribute_selector')
+        layout.operator('gp.coplanar_selector')
 
         layout.label(text='Points:')
         row = layout.row()

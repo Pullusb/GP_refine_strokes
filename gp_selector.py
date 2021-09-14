@@ -581,6 +581,48 @@ class GPREFINE_OT_attribute_selector(Operator):
         # layout.prop(self, "on_points")
         # layout.prop(self, "replace_selection")
 
+class GPREFINE_OT_coplanar_selector(Operator):
+    bl_idname = "gp.coplanar_selector"
+    bl_label = "Coplanar Selector"
+    bl_description = "Select Non coplanar strokes (On active frame)\nYou can invert in redo panel"
+    bl_options = {"REGISTER", "UNDO"}
+    
+    invert : bpy.props.BoolProperty(name="Invert", default=False,
+        description='Select Non Coplanar strokes')
+    verbose : bpy.props.BoolProperty(name="Verbose", default=False,
+        description='Print information in console')
+
+    @classmethod
+    def poll(cls, context):
+        return context.object and context.object.type == 'GPENCIL'
+
+    def invoke(self, context, event):
+        self.frame = active_frame_validity_check(context)
+        if isinstance(self.frame, str):
+            self.report({'ERROR'}, self.frame)
+            return {"CANCELLED"}
+
+        return self.execute(context)
+
+    def execute(self, context):
+
+        strokes = context.object.data.layers.active.active_frame.strokes
+        self.count = len(strokes)
+        self.ct = 0
+        for s in strokes:
+            s.select = gpfunc.is_coplanar_stroke(s, self.verbose) ^ self.invert
+            if s.select:
+                self.ct +=1
+
+        return {"FINISHED"}
+
+    def draw(self, context):
+        layout = self.layout
+        target= "non-coplanar" if self.invert else "coplanar"
+        layout.label(text=f'{self.ct} {target} selected (/{self.count})')
+        layout.prop(self, "invert")
+        # layout.prop(self, "verbose")
+
 
 classes = (
     GPREFINE_OT_select_by_angle,
@@ -590,6 +632,7 @@ classes = (
     GPREFINE_OT_hatching_selector,
     GPREFINE_OT_set_angle_from_stroke,
     GPREFINE_OT_attribute_selector,
+    GPREFINE_OT_coplanar_selector,
 )
 
 

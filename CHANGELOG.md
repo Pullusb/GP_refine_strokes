@@ -1,6 +1,10 @@
 ## Changelog:
 
 
+0.7.1 - 2021-09-14:
+
+- feat: coplanarity selector (on active frame)
+
 0.7.0 - 2021-06-14:
 
 - feat: add context select mode to set target on selection by default.
