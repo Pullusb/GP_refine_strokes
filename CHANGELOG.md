@@ -1,5 +1,8 @@
 ## Changelog:
 
+0.8.0 - 2022-01-17:
+
+- feat: batch tweak GP point vertex color
 
 0.7.1 - 2021-09-14:
 

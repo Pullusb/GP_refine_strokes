@@ -157,6 +157,19 @@ def gp_set_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELE
         for p in s.points:
             setattr(p, attr, amount)
 
+## Point vertex color
+
+def gp_add_vg_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    '''Get a point attribut, an int to Add, target filters'''
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        for p in s.points:
+            p.vertex_color[-1] += amount # (*p.vertex_color[:3], p.vertex_color[-1] + amount)
+
+def gp_set_vg_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    '''Get a point attribut, an int to Add, target filters'''
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        for p in s.points:
+            p.vertex_color[-1] = amount
 
 ## -- thinner tips
 

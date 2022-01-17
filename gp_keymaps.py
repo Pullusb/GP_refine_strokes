@@ -20,7 +20,6 @@ class GPREFINE_OT_delete_last_stroke(bpy.types.Operator):
             self.report({mess[0]}, mess[1])
             return {"CANCELLED"}
         return {"FINISHED"}
- """
 
 class GPREFINE_OT_stroke_eraser(bpy.types.Operator):
     bl_idname = "wm.stroke_eraser"
@@ -87,6 +86,62 @@ class GPREFINE_OT_stroke_eraser(bpy.types.Operator):
             print('GPREFINE_OT_stroke_eraser (id_name: wm.stroke_eraser) is already running. could not launch secondary Eraser')
 
         return {'CANCELLED'}
+ """
+
+
+## try to switch brush at invoke during a modal parallel to 
+class GPREFINE_OT_stroke_eraser(bpy.types.Operator):
+    bl_idname = "gprefine.stroke_eraser"
+    bl_label = "Secondary stroke eraser"
+    bl_description = "Temporary use a secondary eraser by swiching eraser mode"
+    bl_options = {'REGISTER', 'INTERNAL'}#, no 'UNDO', avoid register undo step # 'GRAB_CURSOR', 'BLOCKING'
+
+    _is_running = False# block subsequent 'PRESS' events
+
+
+    bpy.types.WindowManager.tmp_default_eraser = bpy.props.StringProperty(
+        name="temp tool previous mode", description="Use to store Eraser mode used before cutter",
+        default="",
+        options={'SKIP_SAVE'})
+    # bpy.types.WindowManager.tmp_eraser_radius_org_mode = bpy.props.IntProperty(
+    #     name="", description="store initial radius"
+
+    def invoke(self, context, event):
+        self.brush = None
+        for b in bpy.data.brushes:
+            if hasattr(b, 'gpencil_settings'):
+                if b.gpencil_settings:
+                    if b.name.startswith('Eraser'):
+                        if b.gpencil_settings.use_default_eraser:
+                            self.brush = b
+                            break
+        print(1)
+        if not self.brush:
+            return {'CANCELLED'}
+        print(2)
+
+        self.org_eraser_mode = self.brush.gpencil_settings.eraser_mode
+        self.org_eraser_size = self.brush.size
+        
+        self.brush.gpencil_settings.eraser_mode = 'STROKE'
+        self.brush.size = 10
+
+        # bpy.ops.gpencil.draw('INVOKE_DEFAULT', mode='ERASER') # how to trigger a draw ops ?
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+    def modal(self, context, event):
+        if event.type in {'LEFTMOUSE', 'X'} and event.value == 'RELEASE':
+            print('stopped')
+            return self.execute(context)
+        # if event.type == 'LEFTMOUSE' and event.value == 'RELEASE':
+        return {'PASS_THROUGH'}
+
+    def execute(self, context):
+        # restore
+        self.brush.gpencil_settings.eraser_mode = self.org_eraser_mode
+        self.brush.size = self.org_eraser_size
+        return {'FINISHED'}
 
 ### tried to just change the default eraser but doesn't work.
 """ class GPREFINE_OT_stroke_eraser(bpy.types.Operator):
@@ -170,13 +225,23 @@ def register_keymaps():
 
     # - # Shortcut to custom modal stroke eraser
     # km = addon.keymaps.new(name = "Grease Pencil Stroke Paint (Draw brush)", space_type = "EMPTY")# Grease Pencil # Grease Pencil Stroke Paint
-    # kmi = km.keymap_items.new("wm.stroke_eraser", type = 'S', value = "PRESS")
+    # kmi = km.keymap_items.new("gprefine.stroke_eraser", type = 'LEFTMOUSE', value = "PRESS", key_modifier='X')
+    # # kmi = km.keymap_items.new("gprefine.stroke_eraser", type = 'X', value = "PRESS")
+    # kmi.repeat = True
+    # addon_keymaps.append((km, kmi))
+
+
+    # km = addon.keymaps.new(name = "Grease Pencil Stroke Paint (Draw brush)", space_type = "EMPTY")# Grease Pencil # Grease Pencil Stroke Paint
+    # kmi = km.keymap_items.new("gpencil.draw", type = 'LEFTMOUSE', value = "PRESS", key_modifier='X')
+    # # kmi = km.keymap_items.new("gpencil.draw", type = 'X', value = "PRESS")
+    # kmi.properties.mode = 'ERASER'
+    # kmi.properties.wait_for_input = False
     # kmi.repeat = True
     # addon_keymaps.append((km, kmi))
 
     # # - # not in the right context in eraser mode for the release, map the same
     # km = addon.keymaps.new(name = "Grease Pencil Stroke Paint (Erase)", space_type = "EMPTY")# Grease Pencil # Grease Pencil Stroke Paint
-    # kmi = km.keymap_items.new("wm.stroke_eraser", type = 'S', value = "RELEASE")
+    # kmi = km.keymap_items.new("gprefine.stroke_eraser", type = 'X', value = "RELEASE")
     # kmi.repeat = False
     # addon_keymaps.append((km, kmi))
     
@@ -211,20 +276,20 @@ def unregister_keymaps():
 
 classes = (
 # GPREFINE_OT_delete_last_stroke,
-# GPREFINE_OT_stroke_eraser,
+GPREFINE_OT_stroke_eraser,
 )
 
 def register():
     if not bpy.app.background:
-        # for cls in classes:
-        #     bpy.utils.register_class(cls)
+        for cls in classes:
+            bpy.utils.register_class(cls)
         register_keymaps() 
 
 def unregister():
     if not bpy.app.background:
         unregister_keymaps()
-        # for cls in reversed(classes):
-        #     bpy.utils.unregister_class(cls)
+        for cls in reversed(classes):
+            bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()
