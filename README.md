@@ -60,20 +60,20 @@ each call erase starting/ending point. usefull to adjust when stroke has gone to
 **Auto join** (only on last stroke, /!\ experimental, need refining)  
 Merge the start of last stroke with nearest stroke tail found  
 head cutter tolerance : number (as points) from stroke boundary that are evaluated for the lines merge  
-Detection radius : Proximity tolerance to detect surrounding strokes boundarys, relative to screen space, increase if no result  
+Detection radius : Proximity tolerance to detect surrounding strokes boundaries, relative to screen space, increase if no result  
 ![auto join](https://github.com/Pullusb/images_repo/raw/master/GPR_autojoin_oval.gif)
   
 **straighten**  
 Two buttons  
 One keep only first and last point so in-between point information like thickness are lost  
 The other straighten the point and you can affect influence.
-shift+click to reset infuence to 100%
+shift+click to reset influence to 100%
 ctrl+click for homogen pressure
 ![straighten](https://github.com/Pullusb/images_repo/raw/master/GPR_straight_influence.gif)
   
 **to Circle**
 Tranform into average circle
-shift+click to reset infuence to 100%
+shift+click to reset influence to 100%
 ctrl+click for homogen pressure
 
 **polygonize**  
