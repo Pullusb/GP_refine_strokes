@@ -8,6 +8,24 @@ import numpy as np
 
 ### -- GET STROKES FILTERS --
 
+def get_context_scope(context=None):
+    if not context:
+        context = bpy.context
+    pref = context.scene.gprsettings
+    L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
+    if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+        L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+
+    if context.mode != 'PAINT_GPENCIL' and pref.use_select:
+        L, F, S = 'ALL', 'ACTIVE', 'SELECT'
+        ob = context.object
+        if ob and ob.type == 'GPENCIL':
+            if ob.data.use_multiedit:
+                # consider multiframe scope
+                L, F, S = 'ALL', 'SELECT', 'SELECT'
+    
+    return L, F, S
+
 def get_layers(target='SELECT'):
     '''
     Return an iterable list of layer according to keywords target string

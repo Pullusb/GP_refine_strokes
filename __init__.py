@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (0, 8, 0),
+"version": (0, 9, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -13,7 +13,6 @@ bl_info = {
 
 import bpy
 
-from . import addon_updater_ops # updater
 from . import gp_selector
 from . import ui
 
@@ -43,25 +42,6 @@ from .gpfunc import *
 from .import gp_keymaps
 
 ### -- OPERATOR --
-
-def get_context_scope(context=None):
-    if not context:
-        context = bpy.context
-    pref = context.scene.gprsettings
-    L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-    if context.mode == 'PAINT_GPENCIL' and pref.use_context:
-        L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
-
-    if context.mode != 'PAINT_GPENCIL' and pref.use_select:
-        L, F, S = 'ALL', 'ACTIVE', 'SELECT'
-        ob = context.object
-        if ob and ob.type == 'GPENCIL':
-            if ob.data.use_multiedit:
-                # consider multiframe scope
-                L, F, S = 'ALL', 'SELECT', 'SELECT'
-    
-    return L, F, S
-    
 
 class GPREFINE_OT_straighten_stroke(Operator):
     bl_idname = "gp.straighten_stroke"
@@ -424,51 +404,16 @@ class GPR_refine_prop(PropertyGroup):
 
 
 ## updater
-class GPR_addonprefs(AddonPreferences):
-    bl_idname = __name__
+# class GPR_addonprefs(AddonPreferences):
+#     bl_idname = __name__
     
-    auto_check_update : bpy.props.BoolProperty(
-    name="Auto-check for Update",
-    description="If enabled, auto-check for updates using an interval",
-    default=False,
-    )
-
-    updater_intrval_months : bpy.props.IntProperty(
-        name='Months',
-        description="Number of months between checking for updates",
-        default=0,
-        min=0
-        )
-    updater_intrval_days : bpy.props.IntProperty(
-        name='Days',
-        description="Number of days between checking for updates",
-        default=7,
-        min=0,
-        max=31
-        )
-    updater_intrval_hours : bpy.props.IntProperty(
-        name='Hours',
-        description="Number of hours between checking for updates",
-        default=0,
-        min=0,
-        max=23
-        )
-    updater_intrval_minutes : bpy.props.IntProperty(
-        name='Minutes',
-        description="Number of minutes between checking for updates",
-        default=0,
-        min=0,
-        max=59
-        )
-
-    def draw(self, context):
-        layout = self.layout
-        addon_updater_ops.update_settings_ui(self, context)
+#     def draw(self, context):
+#         layout = self.layout
 
 ### --- REGISTER ---
 
 classes = (
-GPR_addonprefs,# updater
+# GPR_addonprefs,
 GPR_refine_prop,
 GPREFINE_OT_refine_ops,
 GPREFINE_OT_straighten_stroke,
@@ -478,7 +423,6 @@ GPREFINE_OT_polygonize,
 
 
 def register():
-    addon_updater_ops.register(bl_info)# updater
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.Scene.gprsettings = PointerProperty(type = GPR_refine_prop)
@@ -488,7 +432,6 @@ def register():
     gp_keymaps.register()#keymaps
 
 def unregister():
-    addon_updater_ops.unregister()# updater
     del bpy.types.Scene.gprsettings
     gp_keymaps.unregister()#keymaps
 

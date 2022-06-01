@@ -82,21 +82,16 @@ class GPREFINE_OT_select_by_length(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        # pref = context.scene.gprsettings
-        # L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        
-        # if not context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL'):# and pref.use_context:
-        #     return {"CANCELLED"}#disable this one in Paint context
+        L, F, S = gpfunc.get_context_scope(context)
+        ## Override stroke target since here it select
+        S = 'ALL' 
 
-        ## select stroke based on 3D length
-        for l in context.object.data.layers:
-            if l.lock or l.hide:
+        ## Select stroke based on 3D length
+        for s in gpfunc.strokelist(t_layer=L, t_frame=F, t_stroke=S):
+            if len(s.points) == 1:
+                s.select = self.include_single_points
                 continue
-            for s in l.active_frame.strokes:
-                if len(s.points) == 1:
-                    s.select = self.include_single_points
-                    continue
-                s.select = utils.get_stroke_length(s) <= self.length
+            s.select = utils.get_stroke_length(s) <= self.length
 
         return {"FINISHED"}
     

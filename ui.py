@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Panel
-from . import addon_updater_ops
+
 ### PANELS ----
 
 #generic class attribute and poll for following panels
@@ -32,8 +32,6 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
         col_pref.prop(context.scene.gprsettings, 'use_select')
         
         #-# Updater
-        addon_updater_ops.check_for_update_background()# updater
-        addon_updater_ops.update_notice_box_ui(self, context)# updater
 
 class GPREFINE_PT_thin_tips(GPR_refine, Panel):
     bl_label = "Thin stroke tips"#"Strokes filters"

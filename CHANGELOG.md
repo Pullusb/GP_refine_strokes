@@ -1,5 +1,10 @@
 ## Changelog:
 
+0.9.0 - 2022-06-01:
+
+- changed: make select by length work according to scope
+- removed: obsolete updater
+
 0.8.0 - 2022-01-17:
 
 - feat: batch tweak GP point vertex color
