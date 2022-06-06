@@ -146,6 +146,17 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
         row.operator('gp.refine_strokes', text='Set alpha').action = 'SET_ALPHA'
 
 
+        col = layout.column(align=True)
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'add_fill_alpha')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_FILL_ALPHA'# Sub vertex color alpha
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_FILL_ALPHA'# Add vertex color alpha
+        
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'set_fill_alpha')
+        row.operator('gp.refine_strokes', text='Set alpha').action = 'SET_FILL_ALPHA'
+
+
 class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
     bl_label = "Stroke reshape"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"

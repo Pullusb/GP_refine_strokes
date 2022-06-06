@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (0, 9, 0),
+"version": (1, 0, 0),
 "blender": (2, 80, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -245,6 +245,16 @@ class GPREFINE_OT_refine_ops(Operator):
         if self.action == "SUB_ALPHA":
             gp_add_vg_alpha(amount= -pref.add_alpha, t_layer=L, t_frame=F, t_stroke=S)
 
+        # stroke color fill
+        if self.action == "SET_FILL_ALPHA":
+            gp_set_stroke_vg_col_fill_alpha(amount=pref.set_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
+
+        if self.action == "ADD_FILL_ALPHA":
+            gp_add_stroke_vg_col_fill_alpha(amount=pref.add_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
+    
+        if self.action == "SUB_FILL_ALPHA":
+            gp_add_stroke_vg_col_fill_alpha(amount= -pref.add_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
+
         ## -- Last stroke modifications
 
         # trim
@@ -378,7 +388,14 @@ class GPR_refine_prop(PropertyGroup):
 
     add_alpha : FloatProperty(name="Vertex Alpha", description="Vertex color alpha to add (point color opacity)", options={'HIDDEN'}, 
     default=0.1, min=0, max=1.0, soft_min=0, soft_max=1.0, step=3, precision=2)
-    
+
+    # fill alpha (stroke fill color opacity)
+    set_fill_alpha : FloatProperty(name="Fill Alpha", description="Vertex fill color alpha to set (stroke color opacity)", options={'HIDDEN'}, 
+    default=0.0, min=0, max=1.0, step=3, precision=2)
+
+    add_fill_alpha : FloatProperty(name="Fill Alpha", description="Vertex fill color alpha to add (stroke color opacity)", options={'HIDDEN'}, 
+    default=0.1, min=0, max=1.0, soft_min=0, soft_max=1.0, step=3, precision=2)
+
     # auto join
     proximity_tolerance : FloatProperty(name="Detection radius", description="Proximity tolerance (Relative to view), number of point detected in range printed in console", options={'HIDDEN'}, 
     default=0.01, min=0.00001, max=0.1, soft_min=0.0001, soft_max=0.1, step=3, precision=3)

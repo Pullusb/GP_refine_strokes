@@ -189,6 +189,16 @@ def gp_set_vg_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT
         for p in s.points:
             p.vertex_color[-1] = amount
 
+## Stroke vecrtex color Fill
+
+def gp_add_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.vertex_color_fill[-1] += amount
+
+def gp_set_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.vertex_color_fill[-1] = amount
+
 ## -- thinner tips
 
 def abs_thinner_tip(s, tip_len=5, middle=0):

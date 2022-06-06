@@ -1,5 +1,10 @@
 ## Changelog:
 
+
+1.0.0 - 2022-06-06:
+
+- added: methods to modulate stroke `Fill Alpha` in `Thickness & Opacity`
+
 0.9.0 - 2022-06-01:
 
 - changed: make select by length work according to scope
