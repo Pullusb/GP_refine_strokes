@@ -14,6 +14,7 @@ bl_info = {
 import bpy
 
 from . import gp_selector
+from . import gp_harmonizer
 from . import ui
 
 
@@ -353,6 +354,8 @@ class GPR_refine_prop(PropertyGroup):
     default=False)
 
     ### Line and points attributes
+    
+    ## TODO: add multipliers
 
     # width (brush radius)
     set_line_width : IntProperty(name="line width", description="Line width to set (correspond to brush radius, pixel value)", options={'HIDDEN'}, 
@@ -416,9 +419,6 @@ class GPR_refine_prop(PropertyGroup):
     ref_angle : bpy.props.IntProperty(name='Reference Angle', default=-45, 
     description='Reference angle to match from -90 to 90\ne.g: / = -70, \ = 70, -- = 0')
 
-    
-
-
 
 ## updater
 # class GPR_addonprefs(AddonPreferences):
@@ -444,6 +444,7 @@ def register():
         bpy.utils.register_class(cls)
     bpy.types.Scene.gprsettings = PointerProperty(type = GPR_refine_prop)
     gp_selector.register()
+    gp_harmonizer.register()
     ui.register()
 
     gp_keymaps.register()#keymaps
@@ -453,6 +454,7 @@ def unregister():
     gp_keymaps.unregister()#keymaps
 
     ui.unregister()
+    gp_harmonizer.unregister()
     gp_selector.unregister()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

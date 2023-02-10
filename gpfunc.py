@@ -199,6 +199,17 @@ def gp_set_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', 
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         s.vertex_color_fill[-1] = amount
 
+
+## Getter
+def get_line_attr(attr, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    return [getattr(s, attr) for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke)]
+
+def get_point_attr(attr, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    p_list = []
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        p_list += [getattr(p, attr) for p in s.points]
+    return p_list
+
 ## -- thinner tips
 
 def abs_thinner_tip(s, tip_len=5, middle=0):

@@ -514,9 +514,9 @@ class GPREFINE_OT_attribute_selector(Operator):
                         p.select = True
             return {"FINISHED"}
 
-        if self.method == 'MEAN': # average
+        if self.method == 'MEAN': # Average
             comp_func = np.mean
-        elif self.method == 'MEDIAN':
+        elif self.method == 'MEDIAN': # Middle value
             comp_func = np.median
         elif self.method == 'MIN':
             comp_func = np.min

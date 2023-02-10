@@ -157,6 +157,19 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
         row.operator('gp.refine_strokes', text='Set alpha').action = 'SET_FILL_ALPHA'
 
 
+class GPREFINE_PT_harmonizer(GPR_refine, Panel):
+    bl_label = "Harmonizer"#"Strokes filters"
+    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
+    # bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        col = layout.column(align=False)
+
+        col.operator('gp.lines_harmonizer', text='Line Thickness').attribute = 'line_width'
+        col.operator('gp.lines_harmonizer', text='Point Pressure').attribute = 'point_pressure'
+
 class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
     bl_label = "Stroke reshape"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
@@ -241,6 +254,7 @@ GPREFINE_PT_stroke_refine_panel,#main panel
 GPREFINE_PT_Selector,
 GPREFINE_PT_stroke_shape_refine,
 GPREFINE_PT_thickness_opacity,
+GPREFINE_PT_harmonizer,
 GPREFINE_PT_resampling,
 GPREFINE_PT_thin_tips,
 GPREFINE_PT_auto_join,
