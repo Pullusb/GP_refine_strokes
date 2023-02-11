@@ -132,6 +132,9 @@ class GPREFINE_OT_lines_harmonizer(Operator):
                 pts_val = [0.0] * len(s.points)
                 s.points.foreach_get(attr_type, pts_val)
                 max_v = max(pts_val)
+                if max_v == 0:
+                    # Skip. Can't divide by 0
+                    continue
     
                 stroke_fac = self.target_val / max_v
                 # print(max_v)
