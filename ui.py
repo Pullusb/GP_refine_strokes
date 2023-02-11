@@ -8,13 +8,14 @@ class GPR_refine:
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Gpencil"
+    # bl_options = {'DEFAULT_CLOSED'}
 
     # @classmethod
     # def poll(cls, context):
     #     return (context.object is not None and context.object.type == 'GPENCIL')
 
 class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
-    bl_label = "Strokes refine"
+    bl_label = "Strokes Refine"
 
     def draw(self, context):
         layout = self.layout
@@ -34,7 +35,7 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
         #-# Updater
 
 class GPREFINE_PT_thin_tips(GPR_refine, Panel):
-    bl_label = "Thin stroke tips"#"Strokes filters"
+    bl_label = "Thin Stroke Tips"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -50,7 +51,7 @@ class GPREFINE_PT_thin_tips(GPR_refine, Panel):
             layout.prop(context.scene.gprsettings, 'percentage_start_tip_len')
             layout.prop(context.scene.gprsettings, 'percentage_end_tip_len')
         layout.prop(context.scene.gprsettings, 'force_max_pressure_line_body')
-        layout.operator('gp.refine_strokes').action = 'THIN_RELATIVE'#, icon='GREASEPENCIL'
+        layout.operator('gp.refine_strokes').action = 'THIN_RELATIVE'
         layout.label(text="Those settings only affect additive or eraser mode")
 
 class GPREFINE_PT_Selector(GPR_refine, Panel):
@@ -85,77 +86,148 @@ class GPREFINE_PT_Selector(GPR_refine, Panel):
         row = layout.row()
         row.operator('gp.select_by_angle', icon='PARTICLE_POINT')
 
+## Thickness and opacity panel
 
 class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
-    bl_label = "Thickness and opacity"#"Strokes filters"
+    bl_label = "Thickness And Opacity"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
     # bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        
+
+class GPREFINE_PT_line_width(GPR_refine, Panel):
+    bl_label = "Line Width"
+    bl_parent_id = "GPREFINE_PT_thickness_opacity"
+    # bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_line_width')
+        row.prop(context.scene.gprsettings, 'add_line_width', text='Add Width') #, text='Add Line Width'
         row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_WIDTH'# Sub line_width
         row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_WIDTH'# Add line_width
-
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_line_width')
+        row.prop(context.scene.gprsettings, 'set_line_width', text='Set Width') #, text='Set Line Width'
         row.operator('gp.refine_strokes', text='Set line width').action = 'SET_LINE_WIDTH'
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'mult_line_width', text='Multiply Width') #, text='Multiply Width'
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_LINE_WIDTH'
 
+class GPREFINE_PT_line_hardness(GPR_refine, Panel):
+    bl_label = "Line Hardness"
+    bl_parent_id = "GPREFINE_PT_thickness_opacity"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_hardness')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_HARDNESS'# Sub line_width
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_HARDNESS'# Add line_width
+        row.prop(context.scene.gprsettings, 'add_hardness', text='Add Hardness')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_HARDNESS'
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_HARDNESS'
 
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_hardness')
+        row.prop(context.scene.gprsettings, 'set_hardness', text='Set Hardness')
         row.operator('gp.refine_strokes', text='Set hardness').action = 'SET_LINE_HARDNESS'
 
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'mult_line_hardness', text='Multiply Hardness')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_LINE_HARDNESS'
+
+class GPREFINE_PT_point_pressure(GPR_refine, Panel):
+    bl_label = "Point Pressure"
+    bl_parent_id = "GPREFINE_PT_thickness_opacity"
+    # bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_pressure')
+        row.prop(context.scene.gprsettings, 'add_pressure', text='Add Pressure')
         row.operator('gp.refine_strokes', text='-').action = 'SUB_PRESSURE'# Sub pressure
         row.operator('gp.refine_strokes', text='+').action = 'ADD_PRESSURE'# Add pressure
         
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_pressure')
+        row.prop(context.scene.gprsettings, 'set_pressure', text='Set Pressure')
         row.operator('gp.refine_strokes', text='Set pressure').action = 'SET_PRESSURE'#, icon='GREASEPENCIL'
-        
+
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'mult_pressure', text='Multiply Pressure')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_PRESSURE'
+
+
+class GPREFINE_PT_point_strength(GPR_refine, Panel):
+    bl_label = "Point Strength"
+    bl_parent_id = "GPREFINE_PT_thickness_opacity"
+    # bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_strength')
+        row.prop(context.scene.gprsettings, 'add_strength', text='Add Strength')
         row.operator('gp.refine_strokes', text='-').action = 'SUB_STRENGTH'# Sub strength
         row.operator('gp.refine_strokes', text='+').action = 'ADD_STRENGTH'# Add strength
         
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_strength')
+        row.prop(context.scene.gprsettings, 'set_strength', text='Set Strength')
         row.operator('gp.refine_strokes', text='Set strength').action = 'SET_STRENGTH'#, icon='GREASEPENCIL'
-        
+
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'mult_strength', text='Multiply Strength')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_STRENGTH'
+
+class GPREFINE_PT_point_alpha(GPR_refine, Panel):
+    bl_label = "Point Alpha"
+    bl_parent_id = "GPREFINE_PT_thickness_opacity"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_alpha')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_ALPHA'# Sub vertex color alpha
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_ALPHA'# Add vertex color alpha
+        row.prop(context.scene.gprsettings, 'add_alpha', text='Add Alpha')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_ALPHA'
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_ALPHA'
         
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_alpha')
+        row.prop(context.scene.gprsettings, 'set_alpha', text='Set Alpha')
         row.operator('gp.refine_strokes', text='Set alpha').action = 'SET_ALPHA'
 
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'mult_alpha', text='Multiply Alpha')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_ALPHA'
+
+class GPREFINE_PT_stroke_fill_alpha(GPR_refine, Panel):
+    bl_label = "Stroke Fill Alpha"
+    bl_parent_id = "GPREFINE_PT_thickness_opacity"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
 
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_fill_alpha')
+        row.prop(context.scene.gprsettings, 'add_fill_alpha', text='Add Fill Alpha')
         row.operator('gp.refine_strokes', text='-').action = 'SUB_FILL_ALPHA'# Sub vertex color alpha
         row.operator('gp.refine_strokes', text='+').action = 'ADD_FILL_ALPHA'# Add vertex color alpha
         
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_fill_alpha')
+        row.prop(context.scene.gprsettings, 'set_fill_alpha', text='Set Fill Alpha')
         row.operator('gp.refine_strokes', text='Set alpha').action = 'SET_FILL_ALPHA'
 
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'mult_fill_alpha', text='Multiply Fill Alpha')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_FILL_ALPHA'
 
 class GPREFINE_PT_harmonizer(GPR_refine, Panel):
     bl_label = "Harmonizer"#"Strokes filters"
@@ -171,7 +243,7 @@ class GPREFINE_PT_harmonizer(GPR_refine, Panel):
         col.operator('gp.lines_harmonizer', text='Point Pressure').attribute = 'point_pressure'
 
 class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
-    bl_label = "Stroke reshape"#"Strokes filters"
+    bl_label = "Stroke Reshape"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
     # bl_options = {'DEFAULT_CLOSED'}
 
@@ -253,7 +325,15 @@ classes = (
 GPREFINE_PT_stroke_refine_panel,#main panel
 GPREFINE_PT_Selector,
 GPREFINE_PT_stroke_shape_refine,
+
 GPREFINE_PT_thickness_opacity,
+GPREFINE_PT_line_width,
+GPREFINE_PT_line_hardness,
+GPREFINE_PT_point_pressure,
+GPREFINE_PT_point_strength,
+GPREFINE_PT_point_alpha,
+GPREFINE_PT_stroke_fill_alpha,
+
 GPREFINE_PT_harmonizer,
 GPREFINE_PT_resampling,
 GPREFINE_PT_thin_tips,

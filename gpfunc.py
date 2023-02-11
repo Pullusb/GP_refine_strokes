@@ -101,7 +101,8 @@ def strokelist(t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
     '''
     ## TODO: when stroke is LAST and layer is ALL it can be the last of all layers, priority must be set to active layer.
     
-    # superBAD - WRONG: (not flattened) : [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
+    # WRONG: (not flattened) here as memento:
+    # [[[s for s in get_strokes(f, target=t_stroke)] for f in get_frames(l, target=t_frame)] for l in get_layers(target=t_layer)][0][0]
 
     # itertool not tested enough, flatenned twice like this need speed tests...
     """ import itertools# un-nesting triple comprehension list
@@ -162,6 +163,10 @@ def gp_set_line_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke=
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         setattr(s, attr, amount)
 
+def gp_mult_line_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        setattr(s, attr, int(getattr(s, attr) * amount))
+
 ## Points attributes
 
 def gp_add_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
@@ -174,6 +179,12 @@ def gp_set_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELE
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         for p in s.points:
             setattr(p, attr, amount)
+
+def gp_mult_attr(attr, amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    '''Get a point attribut, an int to Add, target filters'''
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        for p in s.points:
+            setattr(p, attr, getattr(p, attr) * amount)
 
 ## Point vertex color
 
@@ -189,7 +200,13 @@ def gp_set_vg_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT
         for p in s.points:
             p.vertex_color[-1] = amount
 
-## Stroke vecrtex color Fill
+def gp_mult_vg_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    '''Get a point attribut, an int to Add, target filters'''
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        for p in s.points:
+            p.vertex_color[-1] *= amount
+
+## Stroke vertex color Fill
 
 def gp_add_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
@@ -199,6 +216,9 @@ def gp_set_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', 
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         s.vertex_color_fill[-1] = amount
 
+def gp_mult_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.vertex_color_fill[-1] *= amount
 
 ## Getter
 def get_line_attr(attr, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):

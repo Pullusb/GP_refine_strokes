@@ -1,4 +1,9 @@
-## Changelog
+# Changelog
+
+1.2.0 - 2023-02-11
+
+- added: Thickness and opacity multiply attribute operations
+- changed: UI subpanels for thickness and opacity tweaks
 
 1.1.0 - 2023-02-11
 
