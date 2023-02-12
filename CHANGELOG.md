@@ -1,5 +1,10 @@
 # Changelog
 
+1.2.1 - 2023-02-12
+
+- changed: move attribute harmonizer panel ops to related thickness and opacity subpanels
+- added: addon preferences with Experimental checkbox, display unstable/beta tools
+
 1.2.0 - 2023-02-11
 
 - added: Thickness and opacity multiply attribute operations

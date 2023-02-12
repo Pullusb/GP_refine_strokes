@@ -2,8 +2,8 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (1, 2, 0),
-"blender": (2, 80, 0),
+"version": (1, 2, 1),
+"blender": (3, 3, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
 "doc_url": "https://github.com/Pullusb/GP_refine_strokes",
@@ -13,6 +13,7 @@ bl_info = {
 
 import bpy
 
+from . import preferences
 from . import gp_selector
 from . import gp_harmonizer
 from . import ui
@@ -534,17 +535,9 @@ class GPR_refine_prop(PropertyGroup):
             \ne.g: / = -70, \ = 70, -- = 0')
 
 
-## updater
-# class GPR_addonprefs(AddonPreferences):
-#     bl_idname = __name__
-    
-#     def draw(self, context):
-#         layout = self.layout
-
 ### --- REGISTER ---
 
 classes = (
-# GPR_addonprefs,
 GPR_refine_prop,
 GPREFINE_OT_refine_ops,
 GPREFINE_OT_straighten_stroke,
@@ -554,6 +547,7 @@ GPREFINE_OT_polygonize,
 
 
 def register():
+    preferences.register()
     for cls in classes:
         bpy.utils.register_class(cls)
     bpy.types.Scene.gprsettings = PointerProperty(type = GPR_refine_prop)
@@ -572,6 +566,7 @@ def unregister():
     gp_selector.unregister()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+    preferences.unregister()
 
 if __name__ == "__main__":
     register()

@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Panel
-
+from .preferences import get_addon_prefs
 ### PANELS ----
 
 #generic class attribute and poll for following panels
@@ -34,25 +34,6 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
         
         #-# Updater
 
-class GPREFINE_PT_thin_tips(GPR_refine, Panel):
-    bl_label = "Thin Stroke Tips"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        # row = layout.row()
-        layout.prop(context.scene.gprsettings, 'percentage_use_sync_tip_len')
-        layout = self.layout
-        if context.scene.gprsettings.percentage_use_sync_tip_len:
-            layout.prop(context.scene.gprsettings, 'percentage_tip_len')
-        else:
-            layout.prop(context.scene.gprsettings, 'percentage_start_tip_len')
-            layout.prop(context.scene.gprsettings, 'percentage_end_tip_len')
-        layout.prop(context.scene.gprsettings, 'force_max_pressure_line_body')
-        layout.operator('gp.refine_strokes').action = 'THIN_RELATIVE'
-        layout.label(text="Those settings only affect additive or eraser mode")
 
 class GPREFINE_PT_Selector(GPR_refine, Panel):
     bl_label = "Selections"#"Strokes filters"
@@ -117,6 +98,9 @@ class GPREFINE_PT_line_width(GPR_refine, Panel):
         row.prop(context.scene.gprsettings, 'mult_line_width', text='Multiply Width') #, text='Multiply Width'
         row.operator('gp.refine_strokes', text='*').action = 'MULT_LINE_WIDTH'
 
+        col = layout.column(align=True)
+        col.operator('gp.lines_harmonizer', text='Equalize Line Thickness').attribute = 'line_width'
+
 class GPREFINE_PT_line_hardness(GPR_refine, Panel):
     bl_label = "Line Hardness"
     bl_parent_id = "GPREFINE_PT_thickness_opacity"
@@ -160,6 +144,9 @@ class GPREFINE_PT_point_pressure(GPR_refine, Panel):
         row = col.row()
         row.prop(context.scene.gprsettings, 'mult_pressure', text='Multiply Pressure')
         row.operator('gp.refine_strokes', text='*').action = 'MULT_PRESSURE'
+
+        col = layout.column(align=True)
+        col.operator('gp.lines_harmonizer', text='Equalize Point Pressure').attribute = 'point_pressure'
 
 
 class GPREFINE_PT_point_strength(GPR_refine, Panel):
@@ -229,18 +216,18 @@ class GPREFINE_PT_stroke_fill_alpha(GPR_refine, Panel):
         row.prop(context.scene.gprsettings, 'mult_fill_alpha', text='Multiply Fill Alpha')
         row.operator('gp.refine_strokes', text='*').action = 'MULT_FILL_ALPHA'
 
-class GPREFINE_PT_harmonizer(GPR_refine, Panel):
-    bl_label = "Harmonizer"#"Strokes filters"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    # bl_options = {'DEFAULT_CLOSED'}
+# class GPREFINE_PT_harmonizer(GPR_refine, Panel):
+#     bl_label = "Harmonizer"#"Strokes filters"
+#     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
+#     # bl_options = {'DEFAULT_CLOSED'}
 
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        col = layout.column(align=False)
+#     def draw(self, context):
+#         layout = self.layout
+#         layout.use_property_split = True
+#         col = layout.column(align=False)
 
-        col.operator('gp.lines_harmonizer', text='Line Thickness').attribute = 'line_width'
-        col.operator('gp.lines_harmonizer', text='Point Pressure').attribute = 'point_pressure'
+#         col.operator('gp.lines_harmonizer', text='Line Thickness').attribute = 'line_width'
+#         col.operator('gp.lines_harmonizer', text='Point Pressure').attribute = 'point_pressure'
 
 class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
     bl_label = "Stroke Reshape"#"Strokes filters"
@@ -275,19 +262,6 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
         
         # row.operator('gp.refine_strokes', text='Polygonize', icon='IPO_CONSTANT').action = 'POLYGONIZE' # generic polygonize
 
-class GPREFINE_PT_auto_join(GPR_refine, Panel):
-    bl_label = "Join Strokes"
-    bl_parent_id = "GPREFINE_PT_stroke_refine_panel" # GPREFINE_PT_stroke_shape_refine subpanel of a subpanel
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        #-# (still )experimental Auto join
-        # layout.use_property_split = True
-        # layout.label(text='Auto-join:')
-        layout.prop(context.scene.gprsettings, 'start_point_tolerance')
-        layout.prop(context.scene.gprsettings, 'proximity_tolerance')
-        layout.operator('gp.refine_strokes', text='Auto join', icon='CON_TRACKTO').action = 'GUESS_JOIN'
 
 class GPREFINE_PT_resampling(GPR_refine, Panel):
     bl_label = "Resampling Presets"
@@ -320,31 +294,87 @@ class GPREFINE_PT_analize_gp(GPR_refine, Panel):
         col.operator('gp.refine_strokes', text='Print Points Infos', icon = 'SNAP_MIDPOINT').action = 'INSPECT_POINTS'
         col.operator('gp.refine_strokes', text='List Pressure', icon = 'STYLUS_PRESSURE').action = 'POINTS_PRESSURE_INFOS'
 
+class GPREFINE_PT_thin_tips(GPR_refine, Panel):
+    bl_label = "Thin Stroke Tips"
+    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    # def draw_header(self, context):
+    #     layout = self.layout
+    #     layout.label(text='', icon='ERROR')
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        col = layout.column()
+        col.label(text='(experimental)', icon='ERROR')
+        # row = layout.row()
+        col.prop(context.scene.gprsettings, 'percentage_use_sync_tip_len')
+        if context.scene.gprsettings.percentage_use_sync_tip_len:
+            col.prop(context.scene.gprsettings, 'percentage_tip_len')
+        else:
+            col.prop(context.scene.gprsettings, 'percentage_start_tip_len')
+            col.prop(context.scene.gprsettings, 'percentage_end_tip_len')
+        col.prop(context.scene.gprsettings, 'force_max_pressure_line_body')
+        col.operator('gp.refine_strokes', text='Full And Thin Strokes').action = 'THIN_RELATIVE'
+        # layout.label(text="Those settings only affect additive or eraser mode")
+
+
+class GPREFINE_PT_auto_join(GPR_refine, Panel):
+    bl_label = "Join Strokes"
+    bl_parent_id = "GPREFINE_PT_stroke_refine_panel" # GPREFINE_PT_stroke_shape_refine subpanel of a subpanel
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        col = layout.column()
+        #-# (still )experimental Auto join
+        col.label(text='(experimental)', icon='ERROR')
+        col.prop(context.scene.gprsettings, 'start_point_tolerance')
+        col.prop(context.scene.gprsettings, 'proximity_tolerance')
+        col.operator('gp.refine_strokes', text='Auto join', icon='CON_TRACKTO').action = 'GUESS_JOIN'
 
 classes = (
-GPREFINE_PT_stroke_refine_panel,#main panel
+GPREFINE_PT_stroke_refine_panel,
 GPREFINE_PT_Selector,
 GPREFINE_PT_stroke_shape_refine,
 
 GPREFINE_PT_thickness_opacity,
 GPREFINE_PT_line_width,
-GPREFINE_PT_line_hardness,
 GPREFINE_PT_point_pressure,
 GPREFINE_PT_point_strength,
 GPREFINE_PT_point_alpha,
 GPREFINE_PT_stroke_fill_alpha,
+GPREFINE_PT_line_hardness,
 
-GPREFINE_PT_harmonizer,
 GPREFINE_PT_resampling,
-GPREFINE_PT_thin_tips,
-GPREFINE_PT_auto_join,
 GPREFINE_PT_analize_gp,
 )
+
+experimental = (
+GPREFINE_PT_thin_tips,
+GPREFINE_PT_auto_join,
+)
+
+def register_experimental():
+    for cls in experimental:
+        bpy.utils.register_class(cls)
+
+def unregister_experimental():
+    for cls in reversed(experimental):
+        bpy.utils.unregister_class(cls)
+
+# ---
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+    if get_addon_prefs().experimental:
+        register_experimental()
 
 def unregister():
+    if get_addon_prefs().experimental:
+        unregister_experimental()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

@@ -280,8 +280,15 @@ def reshape_rel_thinner_tip_percentage(s, tip_len=10, variance=0):
     variance randomize the tip_len by given value (positive or negative)
     '''
     thin_range = get_tip_from_percentage(s, tip_len=tip_len, variance=variance)
+    if thin_range is None:
+        return 1
     # Get pressure of point to fade from as reference. 
     #+1 To get one further point as a reference but dont affect it (no change if relaunch except if variance).
+    
+    ## ddirty temp fix
+    if len(s.points) - 1 == thin_range:
+        thin_range -= 1
+
     start_max = s.points[thin_range+1].pressure 
     end_max = s.points[-thin_range-1].pressure  #-1 Same stuff
     for i in range(thin_range):
@@ -306,7 +313,7 @@ def reshape_abs_thinner_tip_percentage(s, tip_len=10, variance=0):
     '''
     thin_range = get_tip_from_percentage(s, tip_len=tip_len, variance=variance)
     max_pressure = max([p.pressure for p in s.points])
-    for i in range(thin_range):#TODO : Transfer based on a curve to avoid straight fade.
+    for i in range(thin_range): # TODO : Transfer based on a curve to avoid straight fade.
         s.points[i].pressure = transfer_value(i, 0, thin_range, 0.1, max_pressure)
         s.points[-(i+1)].pressure = transfer_value(i, 0, thin_range, 0.1, max_pressure)
 
