@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (1, 2, 1),
+"version": (1, 2, 2),
 "blender": (3, 3, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -530,7 +530,7 @@ class GPR_refine_prop(PropertyGroup):
         default=0.010, min=0.0, max=1000, step=0.1, precision=4, options={'HIDDEN'})
 
     ## hatching settings
-    ref_angle : bpy.props.IntProperty(name='Reference Angle', default=-45, 
+    ref_angle : bpy.props.FloatProperty(name='Reference Angle', default=-45, 
         description='Reference angle to match from -90 to 90\
             \ne.g: / = -70, \ = 70, -- = 0')
 

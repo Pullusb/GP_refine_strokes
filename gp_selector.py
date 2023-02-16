@@ -212,7 +212,7 @@ class GPREFINE_OT_hatching_selector(Operator):
     bl_description = "Select straigth strokes based on a -90 to 90 degree angle (0=Horizontal)\ne.g: / = -70, \ = 70, -- = 0"
     bl_options = {"REGISTER", "UNDO"}
 
-    ref_angle: bpy.props.IntProperty(name='Reference Angle', default=-45, 
+    ref_angle: bpy.props.FloatProperty(name='Reference Angle', default=-45, 
     description='Reference angle to match from -90 to 90\ne.g: / = -70, \ = 70, -- = 0')
 
     tolerance: bpy.props.IntProperty(name='Angle Tolerance', default=20, min=0, max=90, 

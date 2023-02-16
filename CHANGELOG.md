@@ -1,5 +1,9 @@
 # Changelog
 
+1.2.2 - 2023-02-16
+
+- fixed: hatching selector, set angle from selection error
+
 1.2.1 - 2023-02-12
 
 - changed: move attribute harmonizer panel ops to related thickness and opacity subpanels
