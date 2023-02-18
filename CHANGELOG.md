@@ -1,5 +1,9 @@
 # Changelog
 
+1.2.3 - 2023-02-18
+
+- removed: Equalizer unused `Affect Strokes Individually`
+
 1.2.2 - 2023-02-16
 
 - fixed: hatching selector, set angle from selection error

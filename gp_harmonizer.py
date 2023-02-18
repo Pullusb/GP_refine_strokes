@@ -42,11 +42,11 @@ class GPREFINE_OT_lines_harmonizer(Operator):
             \n0.5 is median value, 1 = max value, 0 is min value", 
         default=0.5, soft_min=0.0, soft_max=1.0, min=-2.0, max=2.0, step=2, precision=2)
     
-    # only_stroke : bpy.props.BoolProperty(name="Stroke Mateiral only", 
+    # only_stroke : bpy.props.BoolProperty(name="Stroke Material only", 
     #     description="Filter to affect only stroke materials", default=False)
     
-    individually : bpy.props.BoolProperty(name="Affect Strokes Individually", 
-        description="Set the reference by strokes instead of global", default=False)
+    # individually : bpy.props.BoolProperty(name="Affect Strokes Individually", 
+    #     description="Set the reference by strokes instead of global", default=False)
 
     ## Line Width
     ## Point Pressure
@@ -80,13 +80,12 @@ class GPREFINE_OT_lines_harmonizer(Operator):
         self.mean = np.mean(attr_list)
         self.median = np.median(attr_list)
 
-        print('self.min: ', self.min)
-        print('self.max: ', self.max)
-        print('self.mean: ', self.mean)
-        print('self.median: ', self.median)
+        # print('self.min: ', self.min)
+        # print('self.max: ', self.max)
+        # print('self.mean: ', self.mean)
+        # print('self.median: ', self.median)
 
         self.target_val = 0 # will be calculated at beginning of 
-        print('self.target_val: ', self.target_val)
         # if self.target == "point_pressure":
         #     gp_add_line_attr('line_width', amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
         return self.execute(context)
@@ -95,7 +94,7 @@ class GPREFINE_OT_lines_harmonizer(Operator):
         layout = self.layout
         layout.prop(self, "influence")
         layout.prop(self, "ref_fac")
-        layout.prop(self, "individually")
+        # layout.prop(self, "individually")
         # layout.prop(self, "only_stroke")
         
         layout.label(text='infos:')
@@ -113,10 +112,8 @@ class GPREFINE_OT_lines_harmonizer(Operator):
             row.label(text=f'mean: {self.mean:.3f}')
             row.label(text=f'median: {self.median:.3f}')
         
-        if not self.individually:
-            ## Makes no sense in global mode
-            row = layout.row()
-            row.label(text=f'Target: {self.target_val:.3f}')
+
+        row.label(text=f'Target: {self.target_val:.3f}')
         
 
     def execute(self, context):
