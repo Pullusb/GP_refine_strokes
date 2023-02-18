@@ -64,18 +64,18 @@ each call erase starting/ending point. usefull to adjust when stroke has gone to
 **straighten**  
 Two buttons  
 One keep only first and last point so in-between point information like thickness are lost  
-The other straighten the point and you can affect influence.
-shift+click to reset infuence to 100%
-ctrl+click for homogen pressure
+The other straighten the point and you can affect influence.  
+`Shift + Click` to reset infuence to 100%  
+`Ctrl + Click` for homogen pressure  
 ![straighten](https://github.com/Pullusb/images_repo/raw/master/GPR_straight_influence.gif)
   
 **to Circle**
-Tranform into average circle
-shift+click to reset infuence to 100%
-ctrl+click for homogen pressure
+Tranform into average circle  
+`Shift + Click` to reset infuence to 100%  
+`Ctrl + Click` for homogen pressure  
 
 **polygonize**  
-Like the straighten above but by splitting on angles between point, user can manage angle tolerance.  
+Like the straighten above but by splitting on angles between point, user can manage angle tolerance.    
 ![polygonize](https://github.com/Pullusb/images_repo/raw/master/GPR_polygonise.gif)  
 
 ### Thickness and opacity
@@ -134,7 +134,7 @@ Detection radius : Proximity tolerance to detect surrounding strokes boundaries,
 Filter management can be tricky at first.
 
 Examples:  
-Layer: _Active_, Frame: _Active_, stroke: _Selected_ -> You can select strokes that are on different layer, but here your restricted to 'active layer'. 
+Layer: _Active_, Frame: _Active_, stroke: _Selected_ -> You can select strokes that are on different layer, but here your restricted to 'active layer'.
     
 Layer: _All_, Frame: _Active_, stroke: _Last_ -> Here last stroke is not necessarily the one on the active layer (since _All_ layer are targeted)
 
@@ -146,8 +146,6 @@ Keep that in mind when defining your targets
 Bind `Strokes Delete` (see upper) to shortcut `Alt + X`  
 Allow to delete quickly the last bunch of strokes in active layer > frame  
 Like an infinite `Ctrl + Z` !
-
----
 
 <!-- 
 ## Todo:
