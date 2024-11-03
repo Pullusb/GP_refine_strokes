@@ -141,8 +141,8 @@ class GPREFINE_OT_lines_harmonizer(Operator):
                 modulated_fac = 1 - ((1 - stroke_fac) * fac)
                 # print('modulated_fac: ', modulated_fac)
                 
+                ## TODO: replace foreach set
                 s.points.foreach_set(attr_type, np.array(pts_val) * modulated_fac)
-                s.points.update()
 
                 # ## Set all to value (interesting ? can be done with set)
                 # for p in s.points:

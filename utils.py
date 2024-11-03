@@ -82,7 +82,7 @@ def vector_len_from_coord(a, b):
     if type(a) is Vector:
         return (a - b).length
     else:   
-        return (a.co - b.co).length
+        return (a.position - b.position).length
 
 def align_obj_to_vec(obj, v):
     '''align rotation to given vector'''
@@ -123,7 +123,7 @@ def get_stroke_2D_length(s):
     '''return 2D total length (relative to screen) of the stroke'''
     all_len = 0.0
     for i in range(0, len(s.points)-1):
-        len_2D = vector_len_from_coord(location_to_region(s.points[i].co), location_to_region(s.points[i+1].co))
+        len_2D = vector_len_from_coord(location_to_region(s.points[i].position), location_to_region(s.points[i+1].position))
         all_len += len_2D
     return (all_len)
 

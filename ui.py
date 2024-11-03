@@ -12,7 +12,7 @@ class GPR_refine:
 
     # @classmethod
     # def poll(cls, context):
-    #     return (context.object is not None and context.object.type == 'GPENCIL')
+    #     return (context.object is not None and context.object.type == 'GREASEPENCIL')
 
 class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
     bl_label = "Strokes Refine"
@@ -26,7 +26,7 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
         col_filter.prop(context.scene.gprsettings, 'frame_tgt')
         col_filter.prop(context.scene.gprsettings, 'stroke_tgt')
         
-        col_filter.active = not (context.scene.gprsettings.use_select or (context.scene.gprsettings.use_context and context.mode == 'PAINT_GPENCIL'))
+        col_filter.active = not (context.scene.gprsettings.use_select or (context.scene.gprsettings.use_context and context.mode == 'PAINT_GREASE_PENCIL'))
 
         col_pref = layout.column()
         col_pref.prop(context.scene.gprsettings, 'use_context')

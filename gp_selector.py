@@ -39,10 +39,10 @@ class GPREFINE_OT_select_by_angle(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL')
+        return context.object and context.mode in ('EDIT_GREASE_PENCIL', 'SCULPT_GREASE_PENCIL')
  
     def execute(self, context):
-        if context.mode == 'PAINT_GPENCIL':# and pref.use_context:
+        if context.mode == 'PAINT_GREASE_PENCIL':# and pref.use_context:
             return {"CANCELLED"}#disable this one in Paint context
 
         if self.reduce:
@@ -66,7 +66,7 @@ class GPREFINE_OT_select_by_length(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL')
+        return context.object and context.mode in ('EDIT_GREASE_PENCIL', 'SCULPT_GREASE_PENCIL')
 
     length : bpy.props.FloatProperty(name="Length", description="Length tolerance", 
     default=0.010, min=0.0, max=1000, step=0.1, precision=4)
@@ -113,13 +113,13 @@ def hatching_select_on_active_frame():
     # if deviation exceed this angle, skip
     deviation_tolerance = 12
 
-    for s in C.object.data.layers.active.active_frame.strokes:
+    for s in C.object.data.layers.active.current_frame().drawing.strokes:
         count = len(s.points)
 
         if count < 2:
             continue
         # check deviation
-        # view3d_utils.location_3d_to_region_2d(region, rv3d, C.object.matrix_world @ p.co) for p in s.points
+        # view3d_utils.location_3d_to_region_2d(region, rv3d, C.object.matrix_world @ p.position) for p in s.points
         coords_2d = [location_to_region(bpy.context.object.matrix_world @ p.co) for p in s.points]
 
         
@@ -223,12 +223,12 @@ class GPREFINE_OT_hatching_selector(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL')
+        return context.object and context.mode in ('EDIT_GREASE_PENCIL', 'SCULPT_GREASE_PENCIL')
 
     def execute(self, context):
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, 'ALL'#pref.stroke_tgt
-        # if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+        # if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
         #     L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
 
         for s in gpfunc.strokelist(t_layer=L, t_frame=F, t_stroke=S):
@@ -252,12 +252,12 @@ class GPREFINE_OT_set_angle_from_stroke(Operator):
     ## probably better method : use average angle between segments.
     @classmethod
     def poll(cls, context):
-        return context.object and context.mode in ('EDIT_GPENCIL', 'SCULPT_GPENCIL')
+        return context.object and context.mode in ('EDIT_GREASE_PENCIL', 'SCULPT_GREASE_PENCIL')
     def execute(self, context):
         obj = context.object
         pref = context.scene.gprsettings
         L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+        if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
             L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
 
         ## use last selected stroke
@@ -273,8 +273,8 @@ class GPREFINE_OT_set_angle_from_stroke(Operator):
             end_id = -1
         else:
             end_id = -2 # avoid some 
-        a = utils.location_to_region(obj.matrix_world @ s.points[0].co)
-        b = utils.location_to_region(obj.matrix_world @ s.points[end_id].co)
+        a = utils.location_to_region(obj.matrix_world @ s.points[0].position)
+        b = utils.location_to_region(obj.matrix_world @ s.points[end_id].position)
         angle = utils.get_ninety_angle_from(a,b)
         if angle is None:
             self.report({'ERROR'}, f'Could not get angle with a({a}) and b({b}) points')
@@ -293,10 +293,10 @@ def active_frame_validity_check(context):
     gpl = context.object.data.layers
     if not gpl.active:
         return 'No active layer'
-    if not gpl.active.active_frame:
+    if not gpl.active.current_frame():
         return 'No active frame'
-    f = gpl.active.active_frame
-    if not len(f.strokes):
+    f = gpl.active.current_frame()
+    if not len(f.drawing.strokes):
         return 'No strokes in active layer > frame'
     # return f
 
@@ -323,7 +323,7 @@ class GPREFINE_OT_backward_selector(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'GPENCIL'
+        return context.object and context.object.type == 'GREASEPENCIL'
 
     def invoke(self, context, event):
         self.frame = active_frame_validity_check(context)
@@ -335,9 +335,9 @@ class GPREFINE_OT_backward_selector(Operator):
 
     def execute(self, context):
         ## prepare list and index
-        f = context.object.data.layers.active.active_frame
+        f = context.object.data.layers.active.current_frame()
 
-        self.strokelist = [s for s in f.strokes]
+        self.strokelist = [s for s in f.drawing.strokes]
         if not self.forward:
             self.strokelist.reverse()
         
@@ -401,7 +401,7 @@ class GPREFINE_OT_backward_stroke_delete(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'GPENCIL'
+        return context.object and context.object.type == 'GREASEPENCIL'
 
     def invoke(self, context, event):
         self.frame = active_frame_validity_check(context)
@@ -413,9 +413,9 @@ class GPREFINE_OT_backward_stroke_delete(Operator):
 
     def execute(self, context):
         ## prepare list and index
-        f = context.object.data.layers.active.active_frame
+        f = context.object.data.layers.active.current_frame()
 
-        strokelist = [s for s in f.strokes]
+        strokelist = [s for s in f.drawing.strokes]
         if not self.forward:
             strokelist.reverse()
         
@@ -423,7 +423,9 @@ class GPREFINE_OT_backward_stroke_delete(Operator):
         
         self.delete_to = self.backward_delete if self.backward_delete < self.count else self.count
         for i, s in enumerate(strokelist[self.delete_to:0:-1]):
-            f.strokes.remove(s)
+            ## f.drawing.remove_strokes(indices=(0,))
+            # FIXME: use Iindex to delete using remove stroke instead of 'for' loop
+            f.drawing.strokes.remove(s)
 
         return {"FINISHED"}
 
@@ -483,7 +485,7 @@ class GPREFINE_OT_attribute_selector(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'GPENCIL'
+        return context.object and context.object.type == 'GREASEPENCIL'
 
     def invoke(self, context, event):
         self.frame = active_frame_validity_check(context)
@@ -495,14 +497,14 @@ class GPREFINE_OT_attribute_selector(Operator):
 
     def execute(self, context):
         ## prepare list and index
-        f = context.object.data.layers.active.active_frame
+        f = context.object.data.layers.active.current_frame()
         
         if self.use_target_filter:
             pref = context.scene.gprsettings
             L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
             strokelist = gpfunc.strokelist(t_layer=L, t_frame=F, t_stroke=S)
         else:
-            strokelist = [s for s in f.strokes]
+            strokelist = [s for s in f.drawing.strokes]
 
         if self.on_points:
             for s in strokelist:
@@ -594,7 +596,7 @@ class GPREFINE_OT_coplanar_selector(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'GPENCIL'
+        return context.object and context.object.type == 'GREASEPENCIL'
 
     def invoke(self, context, event):
         self.frame = active_frame_validity_check(context)
@@ -606,7 +608,7 @@ class GPREFINE_OT_coplanar_selector(Operator):
 
     def execute(self, context):
 
-        strokes = context.object.data.layers.active.active_frame.strokes
+        strokes = context.object.data.layers.active.current_frame().drawing.strokes
         self.count = len(strokes)
         self.ct = 0
         self.problem = 0
@@ -654,7 +656,7 @@ def unregister():
 def deselect_more_strokes(from_last=True):
     '''Deselect strokes in order'''
     ## setup error handling
-    if not bpy.context.object or bpy.context.object.type != 'GPENCIL':
+    if not bpy.context.object or bpy.context.object.type != 'GREASEPENCIL':
         print('ERROR','no active object or not GP') 
         return
     
@@ -663,16 +665,16 @@ def deselect_more_strokes(from_last=True):
     if not gpl.active:
         print('ERROR','no active layer')
         return
-    if not gpl.active.active_frame:
+    if not gpl.active.current_frame():
         print('ERROR','no active frame')
         return
     
-    f = gpl.active.active_frame
-    if not len(f.strokes):
+    f = gpl.active.current_frame()
+    if not len(f.drawing.strokes):
         print('ERROR','no strokes in active layer > frame')
         return
     
-    strokelist = [s for s in f.strokes]
+    strokelist = [s for s in f.drawing.strokes]
     if not from_last:# NOT from last
         strokelist.reverse()
     
@@ -686,7 +688,7 @@ def deselect_more_strokes(from_last=True):
 def select_more_strokes(from_last=True, clean_after_gap=True):
 
     ## setup error handling
-    if not bpy.context.object or bpy.context.object.type != 'GPENCIL':
+    if not bpy.context.object or bpy.context.object.type != 'GREASEPENCIL':
         print('ERROR','no active object or not GP') 
         return
     
@@ -695,17 +697,17 @@ def select_more_strokes(from_last=True, clean_after_gap=True):
     if not gpl.active:
         print('ERROR','no active layer')
         return
-    if not gpl.active.active_frame:
+    if not gpl.active.current_frame():
         print('ERROR','no active frame')
         return
     
-    f = gpl.active.active_frame
-    total = len(f.strokes)
+    f = gpl.active.current_frame()
+    total = len(f.drawing.strokes)
     if not total:
         print('ERROR','no strokes in active layer > frame')
         return
     
-    strokelist = [s for s in f.strokes]
+    strokelist = [s for s in f.drawing.strokes]
     if from_last:
         strokelist.reverse()
     

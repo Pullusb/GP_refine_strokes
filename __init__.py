@@ -2,8 +2,8 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (1, 2, 3),
-"blender": (3, 3, 0),
+"version": (1, 9, 0),
+"blender": (4, 3, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
 "doc_url": "https://github.com/Pullusb/GP_refine_strokes",
@@ -80,7 +80,7 @@ class GPREFINE_OT_straighten_stroke(Operator):
         layout.prop(self, "homogen_pressure")
 
     def invoke(self, context, event):
-        if context.mode not in ('PAINT_GPENCIL', 'EDIT_GPENCIL'):
+        if context.mode not in ('PAINT_GREASE_PENCIL', 'EDIT_GREASE_PENCIL'):
             return {"CANCELLED"}
         # self.homogen_pressure = False 
         if event.shift:
@@ -118,7 +118,7 @@ class GPREFINE_OT_to_circle_shape(Operator):
         pref = context.scene.gprsettings
         L, F, S = get_context_scope(context)
 
-        if self.individual_strokes or context.mode == 'PAINT_GPENCIL':#all strokes individually
+        if self.individual_strokes or context.mode == 'PAINT_GREASE_PENCIL':#all strokes individually
             for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
                 to_circle_cast_to_average(context.object, s.points,
                     influence=self.influence_val,
@@ -139,11 +139,11 @@ class GPREFINE_OT_to_circle_shape(Operator):
         layout = self.layout
         layout.prop(self, "influence_val")
         layout.prop(self, "homogen_pressure")
-        if context.mode != 'PAINT_GPENCIL':# Not taken into account in paint (no edits, only last)
+        if context.mode != 'PAINT_GREASE_PENCIL':# Not taken into account in paint (no edits, only last)
             layout.prop(self, "individual_strokes")
 
     def invoke(self, context, event):
-        if context.mode not in ('PAINT_GPENCIL', 'EDIT_GPENCIL'):
+        if context.mode not in ('PAINT_GREASE_PENCIL', 'EDIT_GREASE_PENCIL'):
             return {"CANCELLED"}
         if event.shift:
             self.influence_val = 100

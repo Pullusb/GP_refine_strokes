@@ -12,7 +12,7 @@ class GPREFINE_OT_delete_last_stroke(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.object and context.object.type == 'GPENCIL' and context.mode == 'PAINT_GPENCIL'
+        return context.object and context.object.type == 'GREASEPENCIL' and context.mode == 'PAINT_GREASE_PENCIL'
 
     def execute(self, context):
         mess = delete_last_stroke()
@@ -126,7 +126,7 @@ class GPREFINE_OT_stroke_eraser(bpy.types.Operator):
         self.brush.gpencil_settings.eraser_mode = 'STROKE'
         self.brush.size = 10
 
-        # bpy.ops.gpencil.draw('INVOKE_DEFAULT', mode='ERASER') # how to trigger a draw ops ?
+        # bpy.ops.grease_pencil.draw('INVOKE_DEFAULT', mode='ERASER') # how to trigger a draw ops ?
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 

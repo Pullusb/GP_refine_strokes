@@ -13,14 +13,14 @@ def get_context_scope(context=None):
         context = bpy.context
     pref = context.scene.gprsettings
     L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-    if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+    if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
         L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
 
-    if context.mode != 'PAINT_GPENCIL' and pref.use_select:
+    if context.mode != 'PAINT_GREASE_PENCIL' and pref.use_select:
         L, F, S = 'ALL', 'ACTIVE', 'SELECT'
         ob = context.object
-        if ob and ob.type == 'GPENCIL':
-            if ob.data.use_multiedit:
+        if ob and ob.type == 'GREASEPENCIL':
+            if context.scene.tool_settings.use_grease_pencil_multi_frame_editing:
                 # consider multiframe scope
                 L, F, S = 'ALL', 'SELECT', 'SELECT'
     
@@ -32,7 +32,7 @@ def get_layers(target='SELECT'):
     SELECT (default), ACTIVE, ALL, SIDE_SELECT, UNRESTRICTED
     Return empty list if nothing found
     '''
-    if not bpy.context.object.type == 'GPENCIL': return []
+    if not bpy.context.object.type == 'GREASEPENCIL': return []
     if not bpy.context.object.data.layers.active: return []
     
     if not target or target == 'SELECT':# iterable with all selected layer (dopesheet)
@@ -61,10 +61,10 @@ def get_frames(layer, target='ACTIVE'):
     ACTIVE default, ALL, SELECT, 
     Return empty list if nothing found
     '''
-    if not layer.active_frame:return []
+    if not layer.current_frame():return []
 
     if not target or target == 'ACTIVE':#iterable with active frame
-        return  [layer.active_frame]
+        return  [layer.current_frame()]
     
     elif target == 'ALL':#iterable of all frames in layer
         return layer.frames
@@ -80,17 +80,17 @@ def get_strokes(frame, target='SELECT'):
     SELECT (default), ALL, LAST
     Return empty list if nothing found
     '''
-    if not len(frame.strokes):return []
+    if not len(frame.drawing.strokes):return []
     
     if not target or target == 'SELECT':
-        return  [s for s in frame.strokes if s.select]
+        return  [s for s in frame.drawing.strokes if s.select]
     
     elif target == 'ALL':
-        return frame.strokes
+        return frame.drawing.strokes
     
     elif target == 'LAST':
         # index is -1 or 0 if draw on back)
-        return [frame.strokes[get_last_index()]]
+        return [frame.drawing.strokes[get_last_index()]]
     
     return []  
 
@@ -123,13 +123,13 @@ def get_last_stroke(context=None):
     if not context:
         context=bpy.context
     
-    return bpy.context.object.data.layers.active.active_frame.strokes[get_last_index(context)]
+    return bpy.context.object.data.layers.active.current_frame().drawing.strokes[get_last_index(context)]
 
 def selected_strokes():
     strokes = []
     for l in bpy.context.object.data.layers:
         if not l.hide and not l.lock:
-            for s in l.active_frame.strokes:
+            for s in l.current_frame().drawing.strokes:
                 if s.select:
                     strokes.append(s)
     return(strokes)
@@ -347,7 +347,7 @@ def inspect_points(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_in
     print('\nPoint infos:')
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         if s.select:
-            # print(l.info)
+            # print(l.name)
             if all_infos:
                 for at in s_attrs:
                     print(f' {at} : {getattr(s, at)}')
@@ -362,7 +362,7 @@ def inspect_strokes(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_i
     print('\nStrokes infos:')
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
         if s.select:
-            # print(l.info)
+            # print(l.name)
             for at in s_attrs:
                 if not hasattr(s, at):
                     continue  
@@ -390,12 +390,12 @@ def trim_tip_point(context, endpoint=True):
     L, F, S = get_tgts(context)
     ### Last
     # can just filter by task
-    if context.mode == 'PAINT_GPENCIL' and pref.use_context:
+    if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
         layer = bpy.context.object.data.layers.active
-        if not layer or not layer.active_frame or not len(layer.active_frame.strokes):
+        if not layer or not layer.current_frame() or not len(layer.current_frame().drawing.strokes):
             return
         
-        last = layer.active_frame.strokes[get_last_index(context)]#-1 (0 with draw on back is on)
+        last = layer.current_frame().drawing.strokes[get_last_index(context)]#-1 (0 with draw on back is on)
         if len(last.points) > 2:# erase point
             if endpoint:
                 last.points.pop(index=-1)#pop default
@@ -404,7 +404,8 @@ def trim_tip_point(context, endpoint=True):
         else:# erase line
             for _ in range( len(last.points) ):
                 last.points.pop()
-            layer.active_frame.strokes.remove(last)
+            ## FIXME: remove last stroke using drawing.remove_strokes(indices=(0,)) 
+            layer.current_frame().drawing.strokes.remove(last)
         return
 
     ### filters
@@ -419,11 +420,13 @@ def trim_tip_point(context, endpoint=True):
                 else:# erase line
                     for i in range( len(s.points) ):
                         s.points.pop()
-                    f.strokes.remove(s)
+                    ## FIXME: store stroke to remove and trim all at once
+                    f.drawing.strokes.remove(s)
 
 #TODO - preserve tip triming (option or another func), (need a "detect fade" function to give at with index the point really start to fade and offset that) 
 
 def delete_stroke(strokes, s):
+    ## FIXME: need to use index at drawing level
     for i in range(len(s.points)):
         s.points.pop()#pop all point to update viewport
     strokes.remove(s)
@@ -489,8 +492,8 @@ def to_straight_line(s, keep_points=True, influence=100, straight_pressure=True)
                 p.pressure = mean_pressure
 
     else:
-        A = s.points[0].co
-        B = s.points[-1].co
+        A = s.points[0].position
+        B = s.points[-1].position
         # ab_dist = vector_len_from_coord(A,B)
         full_dist = get_stroke_length(s)
         dist_from_start = 0.0
@@ -504,8 +507,8 @@ def to_straight_line(s, keep_points=True, influence=100, straight_pressure=True)
         
         # apply change
         for i in range(1, p_len-1):
-            #s.points[i].co = coord_list[i-1]#direct super straight 100%
-            s.points[i].co = point_from_dist_in_segment_3d(s.points[i].co, coord_list[i-1], influence / 100)
+            #s.points[i].position = coord_list[i-1]#direct super straight 100%
+            s.points[i].position = point_from_dist_in_segment_3d(s.points[i].position, coord_list[i-1], influence / 100)
 
         if straight_pressure:
             # influenced pressure
@@ -520,9 +523,9 @@ def gp_select_by_angle(tol, invert=False):
         pnum = len(s.points)
         if pnum >= 3:#need at least 3 points to calculate angle
             for i in range(pnum-2):#skip two last -2
-                a = location_to_region(s.points[i].co)
-                b = location_to_region(s.points[i+1].co)
-                c = location_to_region(s.points[i+2].co)
+                a = location_to_region(s.points[i].position)
+                b = location_to_region(s.points[i+1].position)
+                c = location_to_region(s.points[i+2].position)
                 ab = b-a
                 bc = c-b
                 
@@ -540,9 +543,9 @@ def gp_select_by_angle_reducted(tol, invert=False):
         if pnum >= 3:#need at least 3 points to calculate angle
             suite = []
             for i in range(pnum-2):#skip two last -2
-                a = location_to_region(s.points[i].co)
-                b = location_to_region(s.points[i+1].co)
-                c = location_to_region(s.points[i+2].co)
+                a = location_to_region(s.points[i].position)
+                b = location_to_region(s.points[i+1].position)
+                c = location_to_region(s.points[i+2].position)
                 ab = b-a
                 bc = c-b
                 
@@ -590,8 +593,8 @@ def straight_stroke_slice(s, influence=100, slices=[], reduce=False, delete=Fals
             # print('e_id: ', e_id)
             e_id = len(s.points) - 1
 
-        A = s.points[s_id].co
-        B = s.points[e_id].co
+        A = s.points[s_id].position
+        B = s.points[e_id].position
         # ab_dist = vector_len_from_coord(A,B)
         full_dist = sum( [vector_len_from_coord(s.points[i],s.points[i+1]) for i in range(s_id, e_id)] )
         dist_from_start = 0.0
@@ -604,8 +607,8 @@ def straight_stroke_slice(s, influence=100, slices=[], reduce=False, delete=Fals
             coord_list.append( point_from_dist_in_segment_3d(A, B, ratio) )
         
         for count, i in enumerate(range(s_id+1, e_id)):#e_id
-            #s.points[i].co = coord_list[i-1]#direct super straight 100%
-            s.points[i].co = point_from_dist_in_segment_3d(s.points[i].co, coord_list[count], influence / 100)
+            #s.points[i].position = coord_list[i-1]#direct super straight 100%
+            s.points[i].position = point_from_dist_in_segment_3d(s.points[i].position, coord_list[count], influence / 100)
     
                 
 
@@ -616,9 +619,9 @@ def get_points_id_by_reduced_angles(s, tol):
     if pnum >= 3:#need at least 3 points to calculate angle
         suite = []
         for i in range(pnum-2):#skip two last -2
-            a = location_to_region(s.points[i].co)
-            b = location_to_region(s.points[i+1].co)
-            c = location_to_region(s.points[i+2].co)
+            a = location_to_region(s.points[i].position)
+            b = location_to_region(s.points[i+1].position)
+            c = location_to_region(s.points[i+2].position)
             ab = b-a
             bc = c-b
             
@@ -646,9 +649,9 @@ def get_points_id_by_angles(s, tol, invert=False):
     added = 0
     if pnum >= 3:#need at least 3 points to calculate angle
         for i in range(pnum-2):#skip two last -2
-            a = location_to_region(s.points[i].co)
-            b = location_to_region(s.points[i+1].co)
-            c = location_to_region(s.points[i+2].co)
+            a = location_to_region(s.points[i].position)
+            b = location_to_region(s.points[i+1].position)
+            c = location_to_region(s.points[i+2].position)
             ab = b-a
             bc = c-b
             angle = get_angle(ab,bc)
@@ -685,7 +688,7 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
     Return error if no points are found close enough.
     '''
     #get last stroke
-    last = bpy.context.object.data.layers.active.active_frame.strokes[-1]
+    last = bpy.context.object.data.layers.active.current_frame().drawing.strokes[-1]
     #strokelist(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='ALL')
     
     # fpt = last.points[0]
@@ -693,9 +696,9 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
     #get other strokes of current layer
     found = False
     if same_material:
-        pool = [s for s in bpy.context.object.data.layers.active.active_frame.strokes[:-1] if s.material_index == last.material_index]
+        pool = [s for s in bpy.context.object.data.layers.active.current_frame().drawing.strokes[:-1] if s.material_index == last.material_index]
     else:
-        pool = bpy.context.object.data.layers.active.active_frame.strokes[:-1]
+        pool = bpy.context.object.data.layers.active.current_frame().drawing.strokes[:-1]
 
     #clamp
     start_point_tolerance = len(last.points)-1 if start_point_tolerance >= len(last.points) else start_point_tolerance
@@ -704,7 +707,7 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
     for s in pool:
         for pid, p in enumerate(s.points):
             for i in range(1 + start_point_tolerance):
-                if checkalign(location_to_region(p.co), location_to_region(last.points[i].co), tol=proximity_tolerance):#2D check #tol=0.01
+                if checkalign(location_to_region(p.position), location_to_region(last.points[i].position), tol=proximity_tolerance):#2D check #tol=0.01
                     # print(f'{i} > {pid}')
                     ct+=1
                     found = True
@@ -759,7 +762,7 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
         
         ### Create stroke
         
-        ns = bpy.context.object.data.layers.active.active_frame.strokes.new()
+        ns = bpy.context.object.data.layers.active.current_frame().drawing.add_strokes([0])
         for s_attr in ('display_mode', 'draw_cyclic', 'end_cap_mode', 'gradient_factor', 'gradient_shape', 'line_width', 'material_index', 'start_cap_mode' ):
             ## readonly : 'groups', 'is_nofill_stroke',
             if hasattr(ns, s_attr):
@@ -774,8 +777,9 @@ def guess_join(same_material=True, proximity_tolerance=0.01, start_point_toleran
                 setattr(ns.points[i], k, v)
 
         ## delete old stroke
-        delete_stroke(bpy.context.object.data.layers.active.active_frame.strokes, close_stroke)
-        delete_stroke(bpy.context.object.data.layers.active.active_frame.strokes, last)
+        ## FIXME: Delete using drawing.remove_strokes with indices
+        delete_stroke(bpy.context.object.data.layers.active.current_frame().drawing.strokes, close_stroke)
+        delete_stroke(bpy.context.object.data.layers.active.current_frame().drawing.strokes, last)
         
     else:
         return 'No close stroke found to join last.\nTry increasing the tolerance and check if there is no depth offset from your point of view'
@@ -790,7 +794,7 @@ def delete_last_stroke():
     '''
     # last_strokes = get_strokes(get_frames(get_layers('ACTIVE')[0], 'ACTIVE')[0], 'LAST')[0]
     try:
-        ss = bpy.context.object.data.layers.active.active_frame.strokes
+        ss = bpy.context.object.data.layers.active.current_frame().drawing.strokes
         if len(ss):
             # ss.remove(ss[-1])#does not refresh the viewport
             delete_stroke(ss, ss[-1])
@@ -862,8 +866,8 @@ def magnet_on_target(src, tgt):
 """ raw func
 def to_circle_cast_to_average():
     ob = C.object
-    stroke = ob.data.layers.active.active_frame.strokes[-1]
-    coords = [location_to_region(ob.matrix_world @ p.co) for p in stroke.points]
+    stroke = ob.data.layers.active.current_frame().drawing.strokes[-1]
+    coords = [location_to_region(ob.matrix_world @ p.position) for p in stroke.points]
 
     ## Determine center : mean center ? -better fitting- bounding box (equivalent ?)
     # center = Vector(np.median(coords, axis=0))
@@ -879,7 +883,7 @@ def to_circle_cast_to_average():
 
     cast_coords = magnet_on_target(coords, circle)
     for p, nco in zip(stroke.points, cast_coords):
-        p.co = ob.matrix_world.inverted() @ region_to_location(nco, p.co)# depth at p.co no good... need reproject """
+        p.position = ob.matrix_world.inverted() @ region_to_location(nco, p.position)# depth at p.position no good... need reproject """
 
 def to_circle_cast_to_average(ob, point_list, influence = 100, straight_pressure = False):
     '''Project given points on 2d average points'''
@@ -887,7 +891,7 @@ def to_circle_cast_to_average(ob, point_list, influence = 100, straight_pressure
     ## TODO reproject on plane if strokes are found coplanar
     ## else reproject on axis given by current blend
 
-    coords = [location_to_region(ob.matrix_world @ p.co) for p in point_list]
+    coords = [location_to_region(ob.matrix_world @ p.position) for p in point_list]
 
     ## Determine center : mean center ? -better fitting- bounding box (equivalent ?)
     # center = Vector(np.median(coords, axis=0))
@@ -904,8 +908,8 @@ def to_circle_cast_to_average(ob, point_list, influence = 100, straight_pressure
     cast_coords = magnet_on_target(coords, circle)
     for p, nco in zip(point_list, cast_coords):
         ## /!\ depth at old point coordinate, jaggy depth... need custom reproject (or warn user to reproject) ?
-        new_co3d = ob.matrix_world.inverted() @ region_to_location(nco, p.co)
-        p.co = point_from_dist_in_segment_3d(p.co, new_co3d, influence / 100)
+        new_co3d = ob.matrix_world.inverted() @ region_to_location(nco, p.position)
+        p.position = point_from_dist_in_segment_3d(p.position, new_co3d, influence / 100)
     
     if straight_pressure:
         m_pressure = np.median([p.pressure for p in point_list])
@@ -927,9 +931,9 @@ def is_coplanar_stroke(s, tol=0.0002, verbose=False) -> bool:
     obj = bpy.context.object
     mat = obj.matrix_world
     pct = len(s.points)
-    a = mat @ s.points[0].co
-    b = mat @ s.points[pct//3].co
-    c = mat @ s.points[pct//3*2].co
+    a = mat @ s.points[0].position
+    b = mat @ s.points[pct//3].position
+    c = mat @ s.points[pct//3*2].position
 
     ab = b-a
     ac = c-a
@@ -939,10 +943,10 @@ def is_coplanar_stroke(s, tol=0.0002, verbose=False) -> bool:
 
     for i, p in enumerate(s.points):
         ## let a tolerance value of at least 0.0002
-        # if abs(geometry.distance_point_to_plane(p.co, a, plane_no)) > tol:
-        if abs(geometry.distance_point_to_plane(mat @ p.co, a, plane_no)) > tol:
+        # if abs(geometry.distance_point_to_plane(p.position, a, plane_no)) > tol:
+        if abs(geometry.distance_point_to_plane(mat @ p.position, a, plane_no)) > tol:
             if verbose:
-                print(f'point{i} is not co-planar') # (distance to plane {geometry.distance_point_to_plane(p.co, a, plane_no)})
+                print(f'point{i} is not co-planar') # (distance to plane {geometry.distance_point_to_plane(p.position, a, plane_no)})
             return False
     return True
 
@@ -962,14 +966,14 @@ def get_coplanar_stroke_vector(s, tol=0.0002, verbose=False):
     obj = bpy.context.object
     mat = obj.matrix_world
     pct = len(s.points)
-    a = mat @ s.points[0].co
-    b = mat @ s.points[pct//3].co
-    c = mat @ s.points[pct//3*2].co
+    a = mat @ s.points[0].position
+    b = mat @ s.points[pct//3].position
+    c = mat @ s.points[pct//3*2].position
 
     """
-    a = s.points[0].co
-    b = s.points[1].co
-    c = s.points[-2].co
+    a = s.points[0].position
+    b = s.points[1].position
+    c = s.points[-2].position
     """
     ab = b-a
     ac = c-a
@@ -981,10 +985,10 @@ def get_coplanar_stroke_vector(s, tol=0.0002, verbose=False):
     # print('plane_no: ', plane_no)
     for i, p in enumerate(s.points):
         ## let a tolerance value of at least 0.0002 maybe more
-        # if abs(geometry.distance_point_to_plane(p.co, a, plane_no)) > tol:
-        if abs(geometry.distance_point_to_plane(mat @ p.co, a, plane_no)) > tol:
+        # if abs(geometry.distance_point_to_plane(p.position, a, plane_no)) > tol:
+        if abs(geometry.distance_point_to_plane(mat @ p.position, a, plane_no)) > tol:
             if verbose:
-                print(f'point{i} is not co-planar') # (distance to plane {geometry.distance_point_to_plane(p.co, a, plane_no)})
+                print(f'point{i} is not co-planar') # (distance to plane {geometry.distance_point_to_plane(p.position, a, plane_no)})
             return
             # val = None
     return val
