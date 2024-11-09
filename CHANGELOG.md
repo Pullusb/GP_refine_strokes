@@ -1,5 +1,11 @@
 # Changelog
 
+2.0.0 - 2024-11-09
+
+- changed: Addon is fully converted to GPv3 for blender 4.3+ (breaking retro-compatibility) :
+- removed: incompatible features with GPv3 (ex: resample stroke presets, since preset used native operator)
+- removed: some operator option that neededed too much rework (often when `drawing` and `stroke index` is needed where function only reived a `stroke` object)
+
 1.2.3 - 2023-02-18
 
 - removed: Equalizer unused `Affect Strokes Individually`

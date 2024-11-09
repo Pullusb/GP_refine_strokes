@@ -31,7 +31,7 @@ class GPREFINE_OT_lines_harmonizer(Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     attribute : StringProperty(name="Attribute",
-        description="Line attribute to harmonize", default="point_pressure", maxlen=0)
+        description="Line attribute to harmonize", default="point_radius", maxlen=0)
     
     influence : bpy.props.FloatProperty(name="Influence", 
         description="Influence Percentage to harmonize at reference level", 
@@ -49,7 +49,7 @@ class GPREFINE_OT_lines_harmonizer(Operator):
     #     description="Set the reference by strokes instead of global", default=False)
 
     ## Line Width
-    ## Point Pressure
+    ## Point Radius
     ## Overall Thickness (point + line)
     ## Alpha
 
@@ -57,11 +57,9 @@ class GPREFINE_OT_lines_harmonizer(Operator):
         self.shift = event.shift
         # pref = context.scene.gprsettings
         self.L, self.F, self.S = gpfunc.get_context_scope(context)
-        
-        if self.attribute == 'line_width':
-            attr_list = gpfunc.get_line_attr('line_width', self.L, self.F, self.S)
-        elif self.attribute == 'point_pressure':
-            attr_list = gpfunc.get_point_attr('pressure', self.L, self.F, self.S)
+
+        if self.attribute == 'point_radius':
+            attr_list = gpfunc.get_point_attr('radius', self.L, self.F, self.S)
         
         if not attr_list:
             self.report({'ERROR'}, 'Nothing found, check Stroke filter')
@@ -86,8 +84,7 @@ class GPREFINE_OT_lines_harmonizer(Operator):
         # print('self.median: ', self.median)
 
         self.target_val = 0 # will be calculated at beginning of 
-        # if self.target == "point_pressure":
-        #     gp_add_line_attr('line_width', amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+
         return self.execute(context)
 
     def draw(self, context):
@@ -121,13 +118,16 @@ class GPREFINE_OT_lines_harmonizer(Operator):
         err = None
         self.target_val = self.min + (self.max - self.min) * self.ref_fac
 
-        if self.attribute == 'point_pressure':
-            attr_type = 'pressure'
+        if self.attribute == 'point_radius':
+            attr_type = 'radius'
 
             for s in gpfunc.strokelist(self.L, self.F, self.S):
                 ## Scale with a multiplier so top level point in the stroke reach reference value
-                pts_val = [0.0] * len(s.points)
-                s.points.foreach_get(attr_type, pts_val)
+                
+                # pts_val = [0.0] * len(s.points)
+                # s.points.foreach_get(attr_type, pts_val)
+                pts_val = [getattr(p, attr_type) for p in s.points]
+
                 max_v = max(pts_val)
                 if max_v == 0:
                     # Skip. Can't divide by 0
@@ -141,19 +141,16 @@ class GPREFINE_OT_lines_harmonizer(Operator):
                 modulated_fac = 1 - ((1 - stroke_fac) * fac)
                 # print('modulated_fac: ', modulated_fac)
                 
-                ## TODO: replace foreach set
-                s.points.foreach_set(attr_type, np.array(pts_val) * modulated_fac)
+                ## no direct foreach set in gpv3
+                # s.points.foreach_set(attr_type, np.array(pts_val) * modulated_fac)
+                ## loop
+                for i, p in enumerate(s.points):
+                    setattr(p, attr_type, pts_val[i] * modulated_fac)
 
-                # ## Set all to value (interesting ? can be done with set)
+                # ## Set all to value (interesting ?)
                 # for p in s.points:
                 #     val = getattr(p, attr_type)
                 #     setattr(p, attr_type, val + (self.target_val - val) * fac)
-
-
-        if self.attribute == 'line_width':
-            for s in gpfunc.strokelist(self.L, self.F, self.S):
-                s.line_width = s.line_width + int((self.target_val - s.line_width) * fac)
-
 
         if err is not None:
             self.report({'ERROR'}, err)

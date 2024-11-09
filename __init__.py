@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (1, 9, 0),
+"version": (2, 0, 0),
 "blender": (4, 3, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -59,8 +59,8 @@ class GPREFINE_OT_straighten_stroke(Operator):
         default=100, min=0, max=100, step=2, precision=1,
         subtype='PERCENTAGE', unit='NONE')
     
-    homogen_pressure : bpy.props.BoolProperty(name="Equalize pressure", 
-        description="Change the pressure of the points (average pressure)",
+    homogen_radius : bpy.props.BoolProperty(name="Equalize radius", 
+        description="Change the radius of the points (average radius)",
         default=False)
 
     def execute(self, context):
@@ -71,23 +71,23 @@ class GPREFINE_OT_straighten_stroke(Operator):
             to_straight_line(s,
                              keep_points=True,
                              influence = self.influence_val,
-                             straight_pressure = self.homogen_pressure)
+                             straight_radius = self.homogen_radius)
         return {"FINISHED"}
     
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "influence_val")
-        layout.prop(self, "homogen_pressure")
+        layout.prop(self, "homogen_radius")
 
     def invoke(self, context, event):
         if context.mode not in ('PAINT_GREASE_PENCIL', 'EDIT_GREASE_PENCIL'):
             return {"CANCELLED"}
-        # self.homogen_pressure = False 
+        # self.homogen_radius = False 
         if event.shift:
             self.influence_val = 100
-        self.homogen_pressure = event.ctrl
+        self.homogen_radius = event.ctrl
         # if event.ctrl:
-        #     self.homogen_pressure = True
+        #     self.homogen_radius = True
         return self.execute(context)
 
 class GPREFINE_OT_to_circle_shape(Operator):
@@ -104,8 +104,8 @@ class GPREFINE_OT_to_circle_shape(Operator):
         default=100, min=0, max=100, step=2, precision=1, 
         subtype='PERCENTAGE', unit='NONE')#NONE
 
-    homogen_pressure : bpy.props.BoolProperty(name="Equalize Pressure", 
-        description="Change the pressure of the points (average pressure)", 
+    homogen_radius : bpy.props.BoolProperty(name="Equalize radius", 
+        description="Change the radius of the points (average radius)", 
         default=False)
     
     individual_strokes : bpy.props.BoolProperty(name="Individual Strokes", 
@@ -122,7 +122,7 @@ class GPREFINE_OT_to_circle_shape(Operator):
             for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
                 to_circle_cast_to_average(context.object, s.points,
                     influence=self.influence_val,
-                    straight_pressure=self.homogen_pressure)
+                    straight_radius=self.homogen_radius)
         else:
             point_list = []
             for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
@@ -131,14 +131,14 @@ class GPREFINE_OT_to_circle_shape(Operator):
                         point_list.append(p)
             to_circle_cast_to_average(context.object, point_list,
                 influence=self.influence_val,
-                straight_pressure=self.homogen_pressure)
+                straight_radius=self.homogen_radius)
 
         return {"FINISHED"}
     
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "influence_val")
-        layout.prop(self, "homogen_pressure")
+        layout.prop(self, "homogen_radius")
         if context.mode != 'PAINT_GREASE_PENCIL':# Not taken into account in paint (no edits, only last)
             layout.prop(self, "individual_strokes")
 
@@ -147,9 +147,9 @@ class GPREFINE_OT_to_circle_shape(Operator):
             return {"CANCELLED"}
         if event.shift:
             self.influence_val = 100
-        self.homogen_pressure = event.ctrl
+        self.homogen_radius = event.ctrl
         # if event.ctrl:
-        #     self.homogen_pressure = True
+        #     self.homogen_radius = True
         return self.execute(context)
 
 class GPREFINE_OT_polygonize(Operator):
@@ -195,7 +195,10 @@ class GPREFINE_OT_polygonize(Operator):
         layout.prop(self, "angle_tolerance")
         layout.prop(self, "influence_val")
         layout.prop(self, "reduce")
-        layout.prop(self, "delete")
+        ## Delete point mode not ready for Gpv3
+        # col = layout.column()
+        # col.prop(self, "delete")
+        # col.enabled
 
     # def invoke(self, context, event):
         
@@ -227,56 +230,56 @@ class GPREFINE_OT_refine_ops(Operator):
                                         variance=pref.percentage_tip_len_random, 
                                         t_layer=L, t_frame=F, t_stroke=S)
         
-        ## -- pressure and strength action
-        if self.action == "ADD_LINE_WIDTH":
-            gp_add_line_attr('line_width', amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+        ## -- radius and opacity action
+        # if self.action == "ADD_LINE_WIDTH":
+        #     gp_add_line_attr('line_width', amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "SUB_LINE_WIDTH":
-            gp_add_line_attr('line_width', amount= -pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+        # if self.action == "SUB_LINE_WIDTH":
+        #     gp_add_line_attr('line_width', amount= -pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
 
-        if self.action == "SET_LINE_WIDTH":
-            gp_set_line_attr('line_width', amount=pref.set_line_width, t_layer=L, t_frame=F, t_stroke=S) 
+        # if self.action == "SET_LINE_WIDTH":
+        #     gp_set_line_attr('line_width', amount=pref.set_line_width, t_layer=L, t_frame=F, t_stroke=S) 
 
-        if self.action == "MULT_LINE_WIDTH":
-            gp_mult_line_attr('line_width', amount=pref.mult_line_width, t_layer=L, t_frame=F, t_stroke=S) 
+        # if self.action == "MULT_LINE_WIDTH":
+        #     gp_mult_line_attr('line_width', amount=pref.mult_line_width, t_layer=L, t_frame=F, t_stroke=S) 
 
-        if self.action == "ADD_LINE_HARDNESS":
-            gp_add_line_attr('hardness', amount=pref.add_hardness, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "ADD_LINE_SOFTNESS":
+            gp_add_line_attr('softness', amount=pref.add_softness, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "SUB_LINE_HARDNESS":
-            gp_add_line_attr('hardness', amount= -pref.add_hardness, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "SUB_LINE_SOFTNESS":
+            gp_add_line_attr('softness', amount= -pref.add_softness, t_layer=L, t_frame=F, t_stroke=S)
 
-        if self.action == "SET_LINE_HARDNESS":
-            gp_set_line_attr('hardness', amount=pref.set_hardness, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "SET_LINE_SOFTNESS":
+            gp_set_line_attr('softness', amount=pref.set_softness, t_layer=L, t_frame=F, t_stroke=S)
 
-        if self.action == "MULT_LINE_HARDNESS":
-            gp_mult_line_attr('line_width', amount=pref.mult_line_hardness, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "MULT_LINE_SOFTNESS":
+            gp_mult_line_attr('softness', amount=pref.mult_line_softness, t_layer=L, t_frame=F, t_stroke=S)
 
         ## -- Points
 
-        if self.action == "ADD_PRESSURE":
-            gp_add_attr('pressure', amount=pref.add_pressure, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "ADD_RADIUS":
+            gp_add_attr('radius', amount=pref.add_radius, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "SUB_PRESSURE":
-            gp_add_attr('pressure', amount= -pref.add_pressure, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "SUB_RADIUS":
+            gp_add_attr('radius', amount= -pref.add_radius, t_layer=L, t_frame=F, t_stroke=S)
 
-        if self.action == "SET_PRESSURE":
-            gp_set_attr('pressure', amount=pref.set_pressure, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "SET_RADIUS":
+            gp_set_attr('radius', amount=pref.set_radius, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "MULT_PRESSURE":
-            gp_mult_attr('pressure', amount=pref.mult_pressure, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "MULT_RADIUS":
+            gp_mult_attr('radius', amount=pref.mult_radius, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "ADD_STRENGTH":
-            gp_add_attr('strength', amount=pref.add_strength, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "ADD_OPACITY":
+            gp_add_attr('opacity', amount=pref.add_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "SUB_STRENGTH":
-            gp_add_attr('strength', amount= -pref.add_strength, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "SUB_OPACITY":
+            gp_add_attr('opacity', amount= -pref.add_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "SET_STRENGTH":
-            gp_set_attr('strength', amount=pref.set_strength, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "SET_OPACITY":
+            gp_set_attr('opacity', amount=pref.set_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
-        if self.action == "MULT_STRENGTH":
-            gp_mult_attr('strength', amount=pref.mult_strength, t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "MULT_OPACITY":
+            gp_mult_attr('opacity', amount=pref.mult_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
         # - vertex color
         if self.action == "SET_ALPHA":
@@ -321,7 +324,7 @@ class GPREFINE_OT_refine_ops(Operator):
 
         if self.action == "STRAIGHT_2_POINTS":
             for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
-                to_straight_line(s, keep_points=False, straight_pressure=True)
+                to_straight_line(s, keep_points=False, straight_radius=True)
         
         # if self.action == "POLYGONIZE":# own operator for redo panel
         #     gp_polygonize(pref.poly_angle_tolerance)
@@ -333,8 +336,8 @@ class GPREFINE_OT_refine_ops(Operator):
         if self.action == "INSPECT_POINTS":
             inspect_points(t_layer=L, t_frame=F, t_stroke=S, all_infos=self.shift)
         
-        if self.action == "POINTS_PRESSURE_INFOS":
-            info_pressure(t_layer=L, t_frame=F, t_stroke=S)
+        if self.action == "POINTS_RADIUS_INFOS":
+            info_radius(t_layer=L, t_frame=F, t_stroke=S)
 
         if err is not None:
             self.report({'ERROR'}, err)
@@ -415,70 +418,70 @@ class GPR_refine_prop(PropertyGroup):
         description="Set the end tip fade lenght as a percentage of the strokes points", 
         default=20, min=5, max=100, step=1, subtype='PERCENTAGE')
     
-    force_max_pressure_line_body : BoolProperty(name="Force max pressure on line body",                              
-        description="On the parts that are not fading, set pressure to maximum level of the line\
+    force_max_radius_line_body : BoolProperty(name="Force max radius on line body",                              
+        description="On the parts that are not fading, set radius to maximum level of the line\
             \nFade from this value on tips", 
         default=False, options={'HIDDEN'},)
 
     ### Line and points attributes
 
 
-    # width (brush radius)
-    set_line_width : IntProperty(name="Line Width",
-        description="Line width to set (brush radius, pixel value)",
-        default=10, min=0, max=500, soft_min=0, soft_max=150, options={'HIDDEN'})
+    ## Line width (from GPv2)
+    # set_line_width : IntProperty(name="Line Width",
+    #     description="Line width to set (brush radius, pixel value)",
+    #     default=10, min=0, max=500, soft_min=0, soft_max=150, options={'HIDDEN'})
 
-    add_line_width : IntProperty(name="Line Width",
-        description="Line width radius to add (brush radius, pixel value)",
-        default=1, min=0, max=300, soft_min=0, soft_max=100, options={'HIDDEN'})
+    # add_line_width : IntProperty(name="Line Width",
+    #     description="Line width radius to add (brush radius, pixel value)",
+    #     default=1, min=0, max=300, soft_min=0, soft_max=100, options={'HIDDEN'})
 
-    mult_line_width : FloatProperty(name="Line Width",
-        description="Line width radius to multiply (brush radius, multiply pixel value)", 
-        default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
+    # mult_line_width : FloatProperty(name="Line Width",
+    #     description="Line width radius to multiply (brush radius, multiply pixel value)", 
+    #     default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
 
-    # hardness (opacity gradient from border to middle of the line)
-    set_hardness : FloatProperty(name="Hardness", 
-        description="Hardness to set\
+    # softness (opacity gradient from border to middle of the line)
+    set_softness : FloatProperty(name="Softness", 
+        description="Softness to set\
             \nAmount of transparency to apply from the border of the point to the center.\
             \nWorks only when the brush is using stroke materials of Dot or Box style", 
         default=1.0, min=0, max=1.0, soft_min=0, soft_max=1.0, precision=2, options={'HIDDEN'})
 
-    add_hardness : FloatProperty(name="Hardness", 
-        description="Hardness radius to add\
+    add_softness : FloatProperty(name="Softness", 
+        description="Softness radius to add\
             \nAmount of transparency to apply from the border of the point to the center.\
             \nWorks only when the brush is using stroke materials of Dot or Box style", 
         default=0.1, min=0, max=1.0, soft_min=0, soft_max=1.0, precision=2, options={'HIDDEN'})
 
-    mult_line_hardness : FloatProperty(name="Hardness", 
-        description="Hardness radius to Multiply\
+    mult_line_softness : FloatProperty(name="Softness", 
+        description="Softness radius to Multiply\
             \nMultiply transparency to apply from the border of the point to the center.\
             \nWorks only when the brush is using stroke materials of Dot or Box style", 
         default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
 
-    # pressure (pen pressure)
-    set_pressure : FloatProperty(name="Pressure",
-        description="Points pressure to set (thickness)", options={'HIDDEN'}, 
-        default=1.0, min=0, max=5.0, soft_min=0, soft_max=2.0, step=3, precision=2)
+    # radius (pen radius)
+    set_radius : FloatProperty(name="Radius",
+        description="Points radius to set (thickness)", options={'HIDDEN'}, 
+        default=0.02, min=0, max=5.0, soft_min=0, soft_max=2.0, step=0.1, precision=3)
     
-    add_pressure : FloatProperty(name="Pressure",
-        description="Points pressure to add (thickness)", options={'HIDDEN'}, 
-        default=0.1, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
+    add_radius : FloatProperty(name="Radius",
+        description="Points radius to add (thickness)", options={'HIDDEN'}, 
+        default=0.001, min=0, max=2.0, soft_min=0, soft_max=1.0, step=0.1, precision=3)
 
-    mult_pressure : FloatProperty(name="Pressure",
-        description="Multiply points pressure by value", 
+    mult_radius : FloatProperty(name="Radius",
+        description="Multiply points radius by value", 
         default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
 
-    # strength (opacity)
-    set_strength : FloatProperty(name="Strength",
-        description="Points strength to set (opacity)", options={'HIDDEN'}, 
+    # opacity (opacity)
+    set_opacity : FloatProperty(name="Opacity",
+        description="Points opacity to set (opacity)", options={'HIDDEN'}, 
         default=1.0, min=0, max=5.0, soft_min=0, soft_max=2.0, step=3, precision=2)
 
-    add_strength : FloatProperty(name="Strength",
-        description="Points strength to add (opacity)", options={'HIDDEN'}, 
+    add_opacity : FloatProperty(name="Opacity",
+        description="Points opacity to add (opacity)", options={'HIDDEN'}, 
         default=0.1, min=0, max=2.0, soft_min=0, soft_max=1.0, step=3, precision=2)
 
-    mult_strength : FloatProperty(name="Strength",
-        description="Multiply points strength by value (opacity)", 
+    mult_opacity : FloatProperty(name="Opacity",
+        description="Multiply points opacity by value (opacity)", 
         default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
 
     # alpha (point color opacity)

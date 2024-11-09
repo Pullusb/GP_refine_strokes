@@ -120,7 +120,7 @@ def hatching_select_on_active_frame():
             continue
         # check deviation
         # view3d_utils.location_3d_to_region_2d(region, rv3d, C.object.matrix_world @ p.position) for p in s.points
-        coords_2d = [location_to_region(bpy.context.object.matrix_world @ p.co) for p in s.points]
+        coords_2d = [location_to_region(bpy.context.object.matrix_world @ p.position) for p in s.points]
 
         
         if count > 2:
@@ -166,7 +166,7 @@ def select_if_aligned_to_angle(s, ref_angle, tolerance, non_straight_tol):
         return
 
     # check deviation
-    coords_2d = [utils.location_to_region(bpy.context.object.matrix_world @ p.co) for p in s.points]
+    coords_2d = [utils.location_to_region(bpy.context.object.matrix_world @ p.position) for p in s.points]
     
     if count > 2:
         #compare straight level only if at least 3 point
@@ -370,7 +370,10 @@ class GPREFINE_OT_backward_selector(Operator):
             for index in range(self.endex+1, self.count):
                 # (if endex+1 >= count loop is not entered)
                 self.strokelist[index].select = self.deselect # False
-
+        
+        ## Need to update then trigger redraw
+        context.object.data.layers.update()
+        context.area.tag_redraw()
         return {"FINISHED"}
 
     def draw(self, context):
@@ -395,7 +398,7 @@ class GPREFINE_OT_backward_stroke_delete(Operator):
 
     backward_delete : bpy.props.IntProperty(
     name="Delete strokes", description="Number of stroke to select backward", default=1,
-    min=1, max=50000, options={'SKIP_SAVE'})
+    min=0, max=50000, options={'SKIP_SAVE'})
 
     forward : bpy.props.BoolProperty(name="Forward Delete", default=False) #, options={'SKIP_SAVE'} ? 
 
@@ -412,20 +415,20 @@ class GPREFINE_OT_backward_stroke_delete(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        ## prepare list and index
         f = context.object.data.layers.active.current_frame()
 
-        strokelist = [s for s in f.drawing.strokes]
-        if not self.forward:
-            strokelist.reverse()
-        
-        self.count = len(strokelist)
-        
+        self.count = len(f.drawing.strokes)
+        stroke_indices = list(range(self.count))
+
         self.delete_to = self.backward_delete if self.backward_delete < self.count else self.count
-        for i, s in enumerate(strokelist[self.delete_to:0:-1]):
-            ## f.drawing.remove_strokes(indices=(0,))
-            # FIXME: use Iindex to delete using remove stroke instead of 'for' loop
-            f.drawing.strokes.remove(s)
+
+        if self.forward:
+            rm_indices = stroke_indices[:self.delete_to]
+        else:
+            rm_indices = stroke_indices[-self.delete_to:]
+        
+        if self.backward_delete > 0:
+            f.drawing.remove_strokes(indices=rm_indices)
 
         return {"FINISHED"}
 
@@ -441,19 +444,20 @@ class GPREFINE_OT_backward_stroke_delete(Operator):
 class GPREFINE_OT_attribute_selector(Operator):
     bl_idname = "gp.attribute_selector"
     bl_label = "Attribute Threshold Selector"
-    bl_description = "Select strokes with a threshold of average points individual attribute (default: pressure)\nTweak settings in redo panel"
+    bl_description = "Select strokes with a threshold of average points individual attribute (default: radius)\
+        \nTweak settings in redo panel"
     bl_options = {"REGISTER", "UNDO"}
 
     attr_threshold: bpy.props.FloatProperty(
-    name="Attribute threshold", description="Select Strokes/points when pressure is below this threshold", default=0.45,
-    min=0.0, max=1.0, step=1, precision=2) #, options={'SKIP_SAVE'}
+    name="Attribute threshold", description="Select Strokes/points when attribute is below this threshold", default=0.45,
+    min=0.0, soft_max=1.0, max=10.0, step=0.1, precision=4) #, options={'SKIP_SAVE'}
 
     attribute: bpy.props.EnumProperty(
         name="Attribute", description="Choose points attribute to use as reference for the selection", 
-        default='pressure', #options={'HIDDEN'},
+        default='radius', #options={'HIDDEN'},
         items=(
-            ('pressure', 'Pressure', 'Use point pressure', 0),
-            ('strength', 'Strength', 'Use point strength', 1),
+            ('radius', 'Radius', 'Use point radius', 0),
+            ('opacity', 'Opacity', 'Use point opacity', 1),
             ))
     
     # optional TODO : line width and hardness ? (complicate because not at point level)
@@ -526,12 +530,12 @@ class GPREFINE_OT_attribute_selector(Operator):
             comp_func = np.max
 
         for s in strokelist:
-            stroke_pressure = comp_func([getattr(p, self.attribute) for p in s.points])
+            stroke_attr = comp_func([getattr(p, self.attribute) for p in s.points])
             if self.replace_selection:
-                s.select = (stroke_pressure < self.attr_threshold) ^ self.greater
+                s.select = (stroke_attr < self.attr_threshold) ^ self.greater
                 continue
 
-            if (stroke_pressure < self.attr_threshold) ^ self.greater:
+            if (stroke_attr < self.attr_threshold) ^ self.greater:
                 s.select = True
 
         return {"FINISHED"}
@@ -617,7 +621,10 @@ class GPREFINE_OT_coplanar_selector(Operator):
             s.select = is_coplanar ^ self.invert
             if s.select:
                 self.ct +=1
-
+        
+        ## Update overlays
+        context.grease_pencil.layers.update()
+        context.area.tag_redraw()
         return {"FINISHED"}
 
     def draw(self, context):

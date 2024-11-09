@@ -78,31 +78,33 @@ class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
         layout = self.layout
         layout.use_property_split = True
 
-class GPREFINE_PT_line_width(GPR_refine, Panel):
-    bl_label = "Line Width"
-    bl_parent_id = "GPREFINE_PT_thickness_opacity"
-    # bl_options = {'DEFAULT_CLOSED'}
 
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        col = layout.column(align=True)
-        row = col.row()
-        row.prop(context.scene.gprsettings, 'add_line_width', text='Add Width') #, text='Add Line Width'
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_WIDTH'# Sub line_width
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_WIDTH'# Add line_width
-        row = col.row()
-        row.prop(context.scene.gprsettings, 'set_line_width', text='Set Width') #, text='Set Line Width'
-        row.operator('gp.refine_strokes', text='Set line width').action = 'SET_LINE_WIDTH'
-        row = col.row()
-        row.prop(context.scene.gprsettings, 'mult_line_width', text='Multiply Width') #, text='Multiply Width'
-        row.operator('gp.refine_strokes', text='*').action = 'MULT_LINE_WIDTH'
+## GPv3 has no line width attribute
+# class GPREFINE_PT_line_width(GPR_refine, Panel):
+#     bl_label = "Line Width"
+#     bl_parent_id = "GPREFINE_PT_thickness_opacity"
+#     # bl_options = {'DEFAULT_CLOSED'}
 
-        col = layout.column(align=True)
-        col.operator('gp.lines_harmonizer', text='Equalize Line Thickness').attribute = 'line_width'
+#     def draw(self, context):
+#         layout = self.layout
+#         layout.use_property_split = True
+#         col = layout.column(align=True)
+#         row = col.row()
+#         row.prop(context.scene.gprsettings, 'add_line_width', text='Add Width') #, text='Add Line Width'
+#         row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_WIDTH'# Sub line_width
+#         row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_WIDTH'# Add line_width
+#         row = col.row()
+#         row.prop(context.scene.gprsettings, 'set_line_width', text='Set Width') #, text='Set Line Width'
+#         row.operator('gp.refine_strokes', text='Set line width').action = 'SET_LINE_WIDTH'
+#         row = col.row()
+#         row.prop(context.scene.gprsettings, 'mult_line_width', text='Multiply Width') #, text='Multiply Width'
+#         row.operator('gp.refine_strokes', text='*').action = 'MULT_LINE_WIDTH'
 
-class GPREFINE_PT_line_hardness(GPR_refine, Panel):
-    bl_label = "Line Hardness"
+#         col = layout.column(align=True)
+#         col.operator('gp.lines_harmonizer', text='Equalize Line Thickness').attribute = 'line_width'
+
+class GPREFINE_PT_line_softness(GPR_refine, Panel):
+    bl_label = "Line Softness"
     bl_parent_id = "GPREFINE_PT_thickness_opacity"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -111,20 +113,20 @@ class GPREFINE_PT_line_hardness(GPR_refine, Panel):
         layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_hardness', text='Add Hardness')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_HARDNESS'
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_HARDNESS'
+        row.prop(context.scene.gprsettings, 'add_softness', text='Add Softness')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_LINE_SOFTNESS'
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_LINE_SOFTNESS'
 
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_hardness', text='Set Hardness')
-        row.operator('gp.refine_strokes', text='Set hardness').action = 'SET_LINE_HARDNESS'
+        row.prop(context.scene.gprsettings, 'set_softness', text='Set Softness')
+        row.operator('gp.refine_strokes', text='Set softness').action = 'SET_LINE_SOFTNESS'
 
         row = col.row()
-        row.prop(context.scene.gprsettings, 'mult_line_hardness', text='Multiply Hardness')
-        row.operator('gp.refine_strokes', text='*').action = 'MULT_LINE_HARDNESS'
+        row.prop(context.scene.gprsettings, 'mult_line_softness', text='Multiply Softness')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_LINE_SOFTNESS'
 
-class GPREFINE_PT_point_pressure(GPR_refine, Panel):
-    bl_label = "Point Pressure"
+class GPREFINE_PT_point_radius(GPR_refine, Panel):
+    bl_label = "Point Radius"
     bl_parent_id = "GPREFINE_PT_thickness_opacity"
     # bl_options = {'DEFAULT_CLOSED'}
 
@@ -133,24 +135,24 @@ class GPREFINE_PT_point_pressure(GPR_refine, Panel):
         layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_pressure', text='Add Pressure')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_PRESSURE'# Sub pressure
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_PRESSURE'# Add pressure
+        row.prop(context.scene.gprsettings, 'add_radius', text='Add Radius')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_RADIUS'# Sub radius
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_RADIUS'# Add radius
         
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_pressure', text='Set Pressure')
-        row.operator('gp.refine_strokes', text='Set pressure').action = 'SET_PRESSURE'#, icon='GREASEPENCIL'
+        row.prop(context.scene.gprsettings, 'set_radius', text='Set Radius')
+        row.operator('gp.refine_strokes', text='Set radius').action = 'SET_RADIUS'#, icon='GREASEPENCIL'
 
         row = col.row()
-        row.prop(context.scene.gprsettings, 'mult_pressure', text='Multiply Pressure')
-        row.operator('gp.refine_strokes', text='*').action = 'MULT_PRESSURE'
+        row.prop(context.scene.gprsettings, 'mult_radius', text='Multiply Radius')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_RADIUS'
 
         col = layout.column(align=True)
-        col.operator('gp.lines_harmonizer', text='Equalize Point Pressure').attribute = 'point_pressure'
+        col.operator('gp.lines_harmonizer', text='Equalize Point Radius').attribute = 'point_radius'
 
 
-class GPREFINE_PT_point_strength(GPR_refine, Panel):
-    bl_label = "Point Strength"
+class GPREFINE_PT_point_opacity(GPR_refine, Panel):
+    bl_label = "Point Opacity"
     bl_parent_id = "GPREFINE_PT_thickness_opacity"
     # bl_options = {'DEFAULT_CLOSED'}
 
@@ -159,17 +161,17 @@ class GPREFINE_PT_point_strength(GPR_refine, Panel):
         layout.use_property_split = True
         col = layout.column(align=True)
         row = col.row()
-        row.prop(context.scene.gprsettings, 'add_strength', text='Add Strength')
-        row.operator('gp.refine_strokes', text='-').action = 'SUB_STRENGTH'# Sub strength
-        row.operator('gp.refine_strokes', text='+').action = 'ADD_STRENGTH'# Add strength
+        row.prop(context.scene.gprsettings, 'add_opacity', text='Add Opacity')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_OPACITY'# Sub opacity
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_OPACITY'# Add opacity
         
         row = col.row()
-        row.prop(context.scene.gprsettings, 'set_strength', text='Set Strength')
-        row.operator('gp.refine_strokes', text='Set strength').action = 'SET_STRENGTH'#, icon='GREASEPENCIL'
+        row.prop(context.scene.gprsettings, 'set_opacity', text='Set Opacity')
+        row.operator('gp.refine_strokes', text='Set opacity').action = 'SET_OPACITY'#, icon='GREASEPENCIL'
 
         row = col.row()
-        row.prop(context.scene.gprsettings, 'mult_strength', text='Multiply Strength')
-        row.operator('gp.refine_strokes', text='*').action = 'MULT_STRENGTH'
+        row.prop(context.scene.gprsettings, 'mult_opacity', text='Multiply Opacity')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_OPACITY'
 
 class GPREFINE_PT_point_alpha(GPR_refine, Panel):
     bl_label = "Point Alpha"
@@ -227,7 +229,7 @@ class GPREFINE_PT_stroke_fill_alpha(GPR_refine, Panel):
 #         col = layout.column(align=False)
 
 #         col.operator('gp.lines_harmonizer', text='Line Thickness').attribute = 'line_width'
-#         col.operator('gp.lines_harmonizer', text='Point Pressure').attribute = 'point_pressure'
+#         col.operator('gp.lines_harmonizer', text='Point Radius').attribute = 'point_radius'
 
 class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
     bl_label = "Stroke Reshape"#"Strokes filters"
@@ -244,14 +246,15 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
 
         ## stroke trimming
         row = layout.row()
-        row.operator('gp.refine_strokes', text='Trim start', icon='TRACKING_CLEAR_FORWARDS').action = 'TRIM_START'
+        # row.operator('gp.refine_strokes', text='Trim start', icon='TRACKING_CLEAR_FORWARDS').action = 'TRIM_START'
         row.operator('gp.refine_strokes', text='Trim end', icon='TRACKING_CLEAR_BACKWARDS').action = 'TRIM_END'
         layout.separator()
         
         ## Shaping
         row = layout.row()
         row.operator('gp.straighten_stroke', text='Straighten', icon='CURVE_PATH')
-        row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
+        ## FIXME: need to pass dawring and index to make this work
+        # row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
         
         row = layout.row()
         row.operator('gp.to_circle_shape', text='To Circle', icon='MESH_CIRCLE')
@@ -272,14 +275,14 @@ class GPREFINE_PT_resampling(GPR_refine, Panel):
         layout = self.layout
         # layout.use_property_split = True
 
-        ## resampling preset
-        col = layout.column(align=True)
-        for i, val in enumerate((0.002, 0.004, 0.006, 0.008, 0.01, 0.015, 0.02, 0.03)):
-            if i % 4 == 0:
-                row = col.row(align=True)
-            row.operator('gpencil.stroke_sample', text = str(val) ).length = val
-        layout.operator('gpencil.stroke_simplify').factor = 0.002
-        layout.operator('gpencil.stroke_subdivide')
+        ## resampling preset (No resampling operator anymore in GPv3)
+        # col = layout.column(align=True)
+        # for i, val in enumerate((0.002, 0.004, 0.006, 0.008, 0.01, 0.015, 0.02, 0.03)):
+        #     if i % 4 == 0:
+        #         row = col.row(align=True)
+        #     row.operator('gpencil.stroke_sample', text = str(val) ).length = val
+        layout.operator('grease_pencil.stroke_simplify').factor = 0.002
+        layout.operator('grease_pencil.stroke_subdivide')
 
 class GPREFINE_PT_analize_gp(GPR_refine, Panel):
     bl_label = "Infos"#"Strokes filters"
@@ -292,7 +295,7 @@ class GPREFINE_PT_analize_gp(GPR_refine, Panel):
         col = layout.column()
         col.operator('gp.refine_strokes', text='Print Stroke Infos', icon = 'GP_SELECT_POINTS').action = 'INSPECT_STROKES'
         col.operator('gp.refine_strokes', text='Print Points Infos', icon = 'SNAP_MIDPOINT').action = 'INSPECT_POINTS'
-        col.operator('gp.refine_strokes', text='List Pressure', icon = 'STYLUS_PRESSURE').action = 'POINTS_PRESSURE_INFOS'
+        col.operator('gp.refine_strokes', text='List Radius', icon = 'STYLUS_PRESSURE').action = 'POINTS_RADIUS_INFOS'
 
 class GPREFINE_PT_thin_tips(GPR_refine, Panel):
     bl_label = "Thin Stroke Tips"
@@ -315,7 +318,7 @@ class GPREFINE_PT_thin_tips(GPR_refine, Panel):
         else:
             col.prop(context.scene.gprsettings, 'percentage_start_tip_len')
             col.prop(context.scene.gprsettings, 'percentage_end_tip_len')
-        col.prop(context.scene.gprsettings, 'force_max_pressure_line_body')
+        col.prop(context.scene.gprsettings, 'force_max_radius_line_body')
         col.operator('gp.refine_strokes', text='Full And Thin Strokes').action = 'THIN_RELATIVE'
         # layout.label(text="Those settings only affect additive or eraser mode")
 
@@ -341,12 +344,12 @@ GPREFINE_PT_Selector,
 GPREFINE_PT_stroke_shape_refine,
 
 GPREFINE_PT_thickness_opacity,
-GPREFINE_PT_line_width,
-GPREFINE_PT_point_pressure,
-GPREFINE_PT_point_strength,
+# GPREFINE_PT_line_width,
+GPREFINE_PT_point_radius,
+GPREFINE_PT_point_opacity,
 GPREFINE_PT_point_alpha,
 GPREFINE_PT_stroke_fill_alpha,
-GPREFINE_PT_line_hardness,
+GPREFINE_PT_line_softness,
 
 GPREFINE_PT_resampling,
 GPREFINE_PT_analize_gp,

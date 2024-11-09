@@ -49,7 +49,7 @@ Select lines with specific angle. Reference angle can be set with a selected str
 ![angle based selection](https://github.com/Pullusb/images_repo/raw/master/gprs_hatching_selector.gif)
 
 **Select attribute threshold**  
-Select strokes or points if attribute (pressure, opacity) is below or above a given threshold  
+Select strokes or points if attribute (radius, opacity) is below or above a given threshold  
 All the tweaking and options are available in the F9 redo panel  
 ![select by attribute](https://github.com/Pullusb/images_repo/raw/master/GPR_select_by_attribute_threshold.gif)
 
@@ -68,13 +68,13 @@ Two buttons
 One keep only first and last point so in-between point information like thickness are lost  
 The other straighten the point and you can affect influence.  
 `Shift + Click` to reset infuence to 100%  
-`Ctrl + Click` for homogen pressure  
+`Ctrl + Click` for homogen radius  
 ![straighten](https://github.com/Pullusb/images_repo/raw/master/GPR_straight_influence.gif)
   
 **to Circle**
 Tranform into average circle  
 `Shift + Click` to reset infuence to 100%  
-`Ctrl + Click` for homogen pressure  
+`Ctrl + Click` for homogen radius  
 
 **polygonize**  
 Like the straighten above but by splitting on angles between point, user can manage angle tolerance.    
@@ -85,13 +85,13 @@ Like the straighten above but by splitting on angles between point, user can man
 Modify the following strokes attributes:
 
 - Line Width : Pixel radius used when drawing, stored at stroke level
-- Line Hardness : "Feather" of the stroke defined by used brush when drawing
+- Line Softness : "Feather" of the stroke defined by used brush when drawing
 - Line Fill Alpha : Vertex color used on fill strokes
 
 Modify following points attributes:
 
-- Point Pressure : Modulated thickness by Pen pressure when drawing, value between `0.0` to `1.0`, can go beyond when changed with radius tool (`Alt+S`)
-- Point Strength : Modulated opacity by Pen pressure, value between `0.0` to `1.0`
+- Point Radius : Modulated thickness by Pen radius when drawing, value between `0.0` to `1.0`, can go beyond when changed with radius tool (`Alt+S`)
+- Point Opacity : Modulated opacity by Pen pressure, value between `0.0` to `1.0`
 - Point Color Alpha : Value to blend between vertex color and stroke material. `0.0` show only material, `1.0` show only painted vertex color.
 
 On all those attributes you can either **add/substract, set or multiply** a value  
@@ -102,8 +102,8 @@ There is also a solution to equalize stroke thickness / pressure
 **Equalize stroke thickness**  
 ![Equalize stroke thickness](https://github.com/Pullusb/images_repo/raw/master/GPR_equalize_stroke_thickness.gif)  
 
-**Equalize point pressure**  
-![Equalize point pressure](https://github.com/Pullusb/images_repo/raw/master/GPR_equalize_point_pressure.gif)  
+**Equalize point radius**  
+![Equalize point radius](https://github.com/Pullusb/images_repo/raw/master/GPR_equalize_point_pressure.gif)  
 
 ## Resampling presets
 
@@ -120,7 +120,7 @@ Print stroke/points infos: Display informations in console (according to filter)
 You can enable experimental features in addon preferences
 Those are not stable and can easily return errors
 
-**Refine stroke** by progressively fade pressure from middle to tip.  
+**Refine stroke** by progressively fade radius from middle to tip.  
 /!\ Works sometimes, percentage is not accurate, can raise errors.
 ![thin tips](https://github.com/Pullusb/images_repo/raw/master/GPR_thinner_tips.gif)  
 
@@ -156,7 +156,39 @@ Like an infinite `Ctrl + Z` !
 - feature action preference : make an addon preferences to change default options.
 
 ### Ideas considered :
-- feature Context actions : Override scope, default action must affect selection if context mode is edit_stroke (as and option ?) -->
+- feature Context actions : Override scope, default action must affect selection if context mode is edit_stroke (as and option ?)
+
+Gpv3 attributes
+
+
+##### Strokes
+add_points(
+aspect_ratio
+curve_type
+cyclic
+end_cap
+fill_color
+fill_opacity
+material_index
+points
+remove_points(
+select
+softness
+start_cap
+time_start
+
+
+##### Points
+delta_time
+opacity
+position
+radius
+rotation
+select
+vertex_color
+
+-->
+
 
 ---
 

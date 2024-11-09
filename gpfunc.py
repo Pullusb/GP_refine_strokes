@@ -210,15 +210,18 @@ def gp_mult_vg_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELEC
 
 def gp_add_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.vertex_color_fill[-1] += amount
+        s.fill_opacity += amount
+        # s.fill_color[-1] += amount
 
 def gp_set_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.vertex_color_fill[-1] = amount
+        s.fill_opacity = amount
+        # s.fill_color[-1] = amount
 
 def gp_mult_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.vertex_color_fill[-1] *= amount
+        s.fill_opacity *= amount
+        # s.fill_color[-1] *= amount
 
 ## Getter
 def get_line_attr(attr, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
@@ -243,14 +246,14 @@ def abs_thinner_tip(s, tip_len=5, middle=0):
             normval = (j - 0) / (tip_len - 0)
             # print("j", j)#Dbg
             # print("normval", normval)#Dbg
-            pt.pressure = normval
+            pt.radius = normval
         if e <= tip_len:
             normval = (e - 0) / (tip_len - 0)
             # print("e", e)#Dbg
             # print("normval", normval)#Dbg
-            pt.pressure = normval
+            pt.radius = normval
         if middle and j > tip_len and e > tip_len:
-            pt.pressure = middle
+            pt.radius = middle
         e -= 1
 
 def get_tip_from_percentage(s, tip_len=20, variance=0):
@@ -275,71 +278,76 @@ def get_tip_from_percentage(s, tip_len=20, variance=0):
 
 def reshape_rel_thinner_tip_percentage(s, tip_len=10, variance=0):
     '''
-    Make points's pressure of strokes thinner by a point number percentage value (on total)
+    Make points's radius of strokes thinner by a point number percentage value (on total)
     value is a percentage (of half a line min 10 percent, max 100)
     variance randomize the tip_len by given value (positive or negative)
     '''
     thin_range = get_tip_from_percentage(s, tip_len=tip_len, variance=variance)
     if thin_range is None:
         return 1
-    # Get pressure of point to fade from as reference. 
+    # Get radius of point to fade from as reference. 
     #+1 To get one further point as a reference but dont affect it (no change if relaunch except if variance).
     
     ## ddirty temp fix
     if len(s.points) - 1 == thin_range:
         thin_range -= 1
 
-    start_max = s.points[thin_range+1].pressure 
-    end_max = s.points[-thin_range-1].pressure  #-1 Same stuff
+    start_max = s.points[thin_range+1].radius 
+    end_max = s.points[-thin_range-1].radius  #-1 Same stuff
     for i in range(thin_range):
         # print(i, 'start ->', transfer_value(i, 0, thin_range, 0.1, start_max) )
         # print(i, 'end ->', transfer_value(i, 0, thin_range, 0.1, end_max) )
-        s.points[i].pressure = transfer_value(i, 0, thin_range, 0.1, start_max)
-        s.points[-(i+1)].pressure = transfer_value(i, 0, thin_range, 0.1, end_max)
+        s.points[i].radius = transfer_value(i, 0, thin_range, 0.1, start_max)
+        s.points[-(i+1)].radius = transfer_value(i, 0, thin_range, 0.1, end_max)
 
     #average value ?
-    """ # get pressure of average max...
+    """ # get radius of average max...
     import statistics
-    pressure_list = [p.pressure for p in s.points if p.pressure > 0.1]
-    if not pressure_list:
-        pressure_list = [p.pressure for p in s.points if p.pressure]
-    average = statistics.mean(pressure_list)"""
+    radius_list = [p.radius for p in s.points if p.radius > 0.1]
+    if not radius_list:
+        radius_list = [p.radius for p in s.points if p.radius]
+    average = statistics.mean(radius_list)"""
     return 0
 
 def reshape_abs_thinner_tip_percentage(s, tip_len=10, variance=0):
     '''
-    Make points's pressure of strokes thinner by a point number percentage value (on total)
+    Make points's radius of strokes thinner by a point number percentage value (on total)
     All stroke will get max value
     '''
     thin_range = get_tip_from_percentage(s, tip_len=tip_len, variance=variance)
-    max_pressure = max([p.pressure for p in s.points])
+    max_radius = max([p.radius for p in s.points])
     for i in range(thin_range): # TODO : Transfer based on a curve to avoid straight fade.
-        s.points[i].pressure = transfer_value(i, 0, thin_range, 0.1, max_pressure)
-        s.points[-(i+1)].pressure = transfer_value(i, 0, thin_range, 0.1, max_pressure)
+        s.points[i].radius = transfer_value(i, 0, thin_range, 0.1, max_radius)
+        s.points[-(i+1)].radius = transfer_value(i, 0, thin_range, 0.1, max_radius)
 
-def info_pressure(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT'):
-    '''print the pressure of targeted strokes'''
-    print('\nPressure list:')
+def info_radius(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT'):
+    '''print the radius of targeted strokes'''
+    print('\nRadius list:')
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        print(['{:.3f}'.format(p.pressure) for p in s.points])
+        print(['{:.4f}'.format(p.radius) for p in s.points])
 
 
 s_attrs = [
-'line_width',
-'hardness',
+'curve_type',
+'fill_color',
+'fill_opacity',
+'softness',
 'material_index',
-'uv_scale',
-'draw_cyclic',
-'aspect',
-'display_mode',
+# 'cyclic',
+# 'start_cap',
+# 'end_cap',
+# 'aspect_ratio',
+# 'time_start',
 ]
 # all stroke dir: ['bound_box_max', 'bound_box_min', 'display_mode', 'draw_cyclic', 'end_cap_mode', 'groups', 'hardness', 'is_nofill_stroke', 'line_width', 'material_index', 'points', 'select', 'start_cap_mode', 'triangles', 'uv_rotation', 'uv_scale', 'uv_translation', 'vertex_color_fill']
 
-p_attrs = ['co', 
-'pressure', 
-'strength', 
-'uv_factor', 
-'uv_rotation', 
+p_attrs = [
+'position', 
+'radius', 
+'opacity', 
+'rotation', 
+'vertex_color', 
+'delta_time',
 ]
 
 def inspect_points(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_infos=False):
@@ -355,7 +363,10 @@ def inspect_points(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_in
                 if p.select:
                     print(f'  [{i}]')
                     for pat in p_attrs:
-                        print(f'   {pat} : {getattr(p, pat)}') 
+                        if pat == 'vertex_color':
+                            print(f'   {pat} : {p.vertex_color[:3]}')
+                        else:
+                            print(f'   {pat} : {getattr(p, pat)}') 
 
 def inspect_strokes(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_infos=False):
     '''print full points infos of targeted strokes'''
@@ -365,8 +376,14 @@ def inspect_strokes(t_layer='ACTIVE', t_frame='ACTIVE', t_stroke='SELECT', all_i
             # print(l.name)
             for at in s_attrs:
                 if not hasattr(s, at):
-                    continue  
-                print(f'  {at} : {getattr(s, at)}')
+                    print('Has no', at)
+                    continue
+                if at == 'fill_color':
+                    # print(f'  {at} : {s.fill_color[:3]}')
+                    print(f'  {at} : {s.fill_color[:]}')
+                else:
+                    print(f'  {at} : {getattr(s, at)}')
+
             print(f'   points : {len(s.points)}')
             print(f'   length : {get_stroke_length(s)}')
 
@@ -412,16 +429,21 @@ def trim_tip_point(context, endpoint=True):
     for l in get_layers(target=L):
         for f in get_frames(l, target=F):
             for s in get_strokes(f, target=S):
+                ## TODO: need stroke index for GPv3
                 if len(s.points) > 2:# erase point
                     if endpoint:
-                        s.points.pop(index=-1)# pop last default
-                    else:
-                        s.points.pop(index=0)
-                else:# erase line
-                    for i in range( len(s.points) ):
-                        s.points.pop()
-                    ## FIXME: store stroke to remove and trim all at once
-                    f.drawing.strokes.remove(s)
+                        s.remove_points(1)
+                        # s.points.pop(index=-1)# pop last default
+
+                    # else:
+                    #     pass
+                    #     s.points.pop(index=0)
+                
+                ## FIXME: store stroke to remove and trim all at once
+                # else:# erase line
+                #     for i in range( len(s.points) ):
+                #         s.points.pop()
+                #     f.drawing.strokes.remove(s)
 
 #TODO - preserve tip triming (option or another func), (need a "detect fade" function to give at with index the point really start to fade and offset that) 
 
@@ -433,7 +455,7 @@ def delete_stroke(strokes, s):
 
 def backup_point_as_dic(p):
     '''backup point as dic (same layer, no parent handling)'''
-    attrlist = ['co', 'pressure', 'select', 'strength', 'uv_factor', 'uv_rotation']
+    attrlist = ['position', 'radius', 'opacity', 'select', 'rotation']
     pdic = {}
     for attr in attrlist:
         # pdic = getattr(p, attr)
@@ -442,7 +464,8 @@ def backup_point_as_dic(p):
 
 def backup_stroke(s, ids=None):
     '''backup given points index if ids pass'''
-    stroke_attr_list = ('display_mode', 'draw_cyclic', 'end_cap_mode', 'gradient_factor', 'gradient_shape', 'groups', 'is_nofill_stroke', 'line_width', 'material_index', 'start_cap_mode' )#
+    stroke_attr_list = ('curve_type', 'cyclic', 'material_index', 'start_cap', 'end_cap', 'fill_color', 'fill_opacity', 'softness', 'aspect_ratio')
+    # 'gradient_factor', 'gradient_shape', 'groups', 'is_nofill_stroke', # <- old gpv2
     sdic = {}
     for att in stroke_attr_list:
         if hasattr(s, att):
@@ -471,49 +494,51 @@ def pseudo_subdiv(a, b, c, d):
     # lets subdivide two last stroke instead.
 
 
-def to_straight_line(s, keep_points=True, influence=100, straight_pressure=True):
+def to_straight_line(s, keep_points=True, influence=100, straight_radius=True):
     '''
     keep points : if false only start and end point stay delete all other
-    straight_pressure : take the mean pressure of all points and apply to stroke.
+    straight_radius : take the mean radius of all points and apply to stroke.
     '''
     
     p_len = len(s.points)
     if p_len <= 2: # 1 or 2 points only, cancel
         return
 
-    if straight_pressure:
-        mean_pressure = mean([p.pressure for p in s.points])#can use a foreach_get but might not be faster.
+    if straight_radius:
+        mean_radius = mean([p.radius for p in s.points])#can use a foreach_get but might not be faster.
 
     if not keep_points:
-        for i in range(p_len-2):
-            s.points.pop(index=1)
-        if straight_pressure:
+        if straight_radius:
             for p in s.points:
-                p.pressure = mean_pressure
-
-    else:
-        A = s.points[0].position
-        B = s.points[-1].position
-        # ab_dist = vector_len_from_coord(A,B)
-        full_dist = get_stroke_length(s)
-        dist_from_start = 0.0
-        coord_list = []
+                p.radius = mean_radius
         
-        for i in range(1, p_len-1):# all but first and last
-            dist_from_start += vector_len_from_coord(s.points[i-1],s.points[i])
-            ratio = dist_from_start / full_dist
-            # dont apply directly (change line as we measure it in loop)
-            coord_list.append( point_from_dist_in_segment_3d(A, B, ratio) )
-        
-        # apply change
-        for i in range(1, p_len-1):
-            #s.points[i].position = coord_list[i-1]#direct super straight 100%
-            s.points[i].position = point_from_dist_in_segment_3d(s.points[i].position, coord_list[i-1], influence / 100)
+        ## FIXME: need drawing stroke index to resize drawing
+        # for i in range(p_len-2):
+        #     s.points.pop(index=1)
+        return
 
-        if straight_pressure:
-            # influenced pressure
-            for p in s.points:
-                p.pressure = p.pressure + ((mean_pressure - p.pressure) * (influence / 100))
+    A = s.points[0].position
+    B = s.points[-1].position
+    # ab_dist = vector_len_from_coord(A,B)
+    full_dist = get_stroke_length(s)
+    dist_from_start = 0.0
+    coord_list = []
+    
+    for i in range(1, p_len-1):# all but first and last
+        dist_from_start += vector_len_from_coord(s.points[i-1],s.points[i])
+        ratio = dist_from_start / full_dist
+        # dont apply directly (change line as we measure it in loop)
+        coord_list.append( point_from_dist_in_segment_3d(A, B, ratio) )
+    
+    # apply change
+    for i in range(1, p_len-1):
+        #s.points[i].position = coord_list[i-1]#direct super straight 100%
+        s.points[i].position = point_from_dist_in_segment_3d(s.points[i].position, coord_list[i-1], influence / 100)
+
+    if straight_radius:
+        # influenced radius
+        for p in s.points:
+            p.radius = p.radius + ((mean_radius - p.radius) * (influence / 100))
 
 
 #without reduce (may be faster)
@@ -560,9 +585,12 @@ def gp_select_by_angle_reducted(tol, invert=False):
                         #first element of decreasing filtered list, then index of the points
                         keys.append(sorted(suite, key=lambda x: x[1], reverse=True)[0][0])
                         suite = []
-                
+
             sel_list = [(i in keys) ^ invert for i in range(pnum)]
-            s.points.foreach_set('select', sel_list)
+            # s.points.foreach_set('select', sel_list) # no foreach on stroke object in gpv3
+            for i, p in enumerate(s.points):
+                p.select = sel_list[i]
+
             # s.points[i+1].select = abs(angle) > tol
                     
                 #calculate vector from current and next and store only "key" points:
@@ -580,10 +608,11 @@ def straight_stroke_slice(s, influence=100, slices=[], reduce=False, delete=Fals
             # with reduce on, delete mode often delete last point... substract last slice by one if possible and if reduce is passed
             slices[-1][1] = slices[-1][1] - 1
 
-        for sl in reversed(slices):
-            # print(sl)
-            for pid in reversed(range(sl[0]+1,sl[1])):#sl[1]+1 ?
-                s.points.pop(index=pid)
+        ## delete inner points needs to remake the stroke in gpv3
+        # for sl in reversed(slices):
+        #     # print(sl)
+        #     for pid in reversed(range(sl[0]+1,sl[1])):#sl[1]+1 ?
+        #         s.points.pop(index=pid)
         return
 
     for sl in slices:
@@ -885,7 +914,7 @@ def to_circle_cast_to_average():
     for p, nco in zip(stroke.points, cast_coords):
         p.position = ob.matrix_world.inverted() @ region_to_location(nco, p.position)# depth at p.position no good... need reproject """
 
-def to_circle_cast_to_average(ob, point_list, influence = 100, straight_pressure = False):
+def to_circle_cast_to_average(ob, point_list, influence = 100, straight_radius = False):
     '''Project given points on 2d average points'''
 
     ## TODO reproject on plane if strokes are found coplanar
@@ -911,13 +940,13 @@ def to_circle_cast_to_average(ob, point_list, influence = 100, straight_pressure
         new_co3d = ob.matrix_world.inverted() @ region_to_location(nco, p.position)
         p.position = point_from_dist_in_segment_3d(p.position, new_co3d, influence / 100)
     
-    if straight_pressure:
-        m_pressure = np.median([p.pressure for p in point_list])
-        # m_pressure = np.mean([p.pressure for p in point_list])
+    if straight_radius:
+        m_radius = np.median([p.radius for p in point_list])
+        # m_radius = np.mean([p.radius for p in point_list])
         for p in point_list:
             # add a percentage of the difference
-            p.pressure = p.pressure + ((m_pressure - p.pressure) * (influence / 100))
-            # p.pressure = m_pressure #without influence
+            p.radius = p.radius + ((m_radius - p.radius) * (influence / 100))
+            # p.radius = m_radius #without influence
 
 def is_coplanar_stroke(s, tol=0.0002, verbose=False) -> bool:
     '''
