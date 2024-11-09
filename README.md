@@ -4,6 +4,8 @@ Blender addon - Bunch of functions for Grease Pencil post-drawing strokes adjust
 
 **[Download latest](https://github.com/Pullusb/GP_refine_strokes/archive/master.zip)**
 
+**[Download for Blender 4.2 and below](https://github.com/Pullusb/GP_refine_strokes/releases/download/v1.2.3/GP_refine_strokes-Blender_4_2-or-below.zip)**
+
 ---  
 
 ## Where ?
