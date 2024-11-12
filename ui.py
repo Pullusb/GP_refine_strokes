@@ -253,7 +253,7 @@ class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
         ## Shaping
         row = layout.row()
         row.operator('gp.straighten_stroke', text='Straighten', icon='CURVE_PATH')
-        ## FIXME: need to pass dawring and index to make this work
+        ## FIXME: need to pass drawing and index to make this work
         # row.operator('gp.refine_strokes', text='Straight strict 2 points', icon='IPO_LINEAR').action = 'STRAIGHT_2_POINTS'
         
         row = layout.row()

@@ -404,7 +404,7 @@ def thin_stroke_tips_percentage(tip_len=30, variance=0, t_layer='ALL', t_frame='
 def trim_tip_point(context, endpoint=True):
     '''endpoint : delete last point, else first point'''
     pref = context.scene.gprsettings
-    L, F, S = get_tgts(context)
+
     ### Last
     # can just filter by task
     if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
@@ -413,19 +413,26 @@ def trim_tip_point(context, endpoint=True):
             return
         
         last = layer.current_frame().drawing.strokes[get_last_index(context)]#-1 (0 with draw on back is on)
-        if len(last.points) > 2:# erase point
+        if len(last.points) > 2:
+            # erase point
             if endpoint:
-                last.points.pop(index=-1)#pop default
+                last.remove_points(1)
+                # last.points.pop(index=-1)#pop default
             else:
-                last.points.pop(index=0)
-        else:# erase line
-            for _ in range( len(last.points) ):
-                last.points.pop()
-            ## FIXME: remove last stroke using drawing.remove_strokes(indices=(0,)) 
-            layer.current_frame().drawing.strokes.remove(last)
+                ## FIXME gpv3: Need to rebuild full stroke to remove first point
+                pass
+                # last.points.pop(index=0)
+
+        else:
+            # erase line
+            print('om')
+            drawing = layer.current_frame().drawing
+            last_index = len(drawing.strokes) - 1
+            drawing.remove_strokes(indices=[last_index])
         return
 
-    ### filters
+    L, F, S = get_tgts(context)
+    ### Filters
     for l in get_layers(target=L):
         for f in get_frames(l, target=F):
             for s in get_strokes(f, target=S):
