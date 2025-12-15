@@ -218,6 +218,29 @@ class GPREFINE_PT_stroke_fill_alpha(GPR_refine, Panel):
         row.prop(context.scene.gprsettings, 'mult_fill_alpha', text='Multiply Fill Alpha')
         row.operator('gp.refine_strokes', text='*').action = 'MULT_FILL_ALPHA'
 
+class GPREFINE_PT_stroke_fill_opacity(GPR_refine, Panel):
+    bl_label = "Stroke Fill Opacity"
+    bl_parent_id = "GPREFINE_PT_thickness_opacity"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        col = layout.column(align=True)
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'add_fill_opacity', text='Add Fill Opacity')
+        row.operator('gp.refine_strokes', text='-').action = 'SUB_FILL_OPACITY'# Sub vertex color opacity
+        row.operator('gp.refine_strokes', text='+').action = 'ADD_FILL_OPACITY'# Add vertex color opacity
+        
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'set_fill_opacity', text='Set Fill Opacity')
+        row.operator('gp.refine_strokes', text='Set opacity').action = 'SET_FILL_OPACITY'
+
+        row = col.row()
+        row.prop(context.scene.gprsettings, 'mult_fill_opacity', text='Multiply Fill Opacity')
+        row.operator('gp.refine_strokes', text='*').action = 'MULT_FILL_OPACITY'
+
 # class GPREFINE_PT_harmonizer(GPR_refine, Panel):
 #     bl_label = "Harmonizer"#"Strokes filters"
 #     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
@@ -349,6 +372,7 @@ GPREFINE_PT_point_radius,
 GPREFINE_PT_point_opacity,
 GPREFINE_PT_point_alpha,
 GPREFINE_PT_stroke_fill_alpha,
+GPREFINE_PT_stroke_fill_opacity,
 GPREFINE_PT_line_softness,
 
 GPREFINE_PT_resampling,

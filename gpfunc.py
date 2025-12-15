@@ -206,22 +206,33 @@ def gp_mult_vg_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELEC
         for p in s.points:
             p.vertex_color[-1] *= amount
 
-## Stroke vertex color Fill
+## Stroke vertex color opacity
+
+def gp_add_stroke_fill_opacity(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.fill_opacity += amount
+
+def gp_set_stroke_fill_opacity(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.fill_opacity = amount
+
+def gp_mult_stroke_fill_opacity(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
+    for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
+        s.fill_opacity *= amount
+
+## Stroke color fill alpha
 
 def gp_add_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.fill_opacity += amount
-        # s.fill_color[-1] += amount
+        s.fill_color[-1] += amount
 
 def gp_set_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.fill_opacity = amount
-        # s.fill_color[-1] = amount
+        s.fill_color[-1] = amount
 
 def gp_mult_stroke_vg_col_fill_alpha(amount, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        s.fill_opacity *= amount
-        # s.fill_color[-1] *= amount
+        s.fill_color[-1] *= amount
 
 ## Getter
 def get_line_attr(attr, t_layer='SELECT', t_frame='ACTIVE', t_stroke='SELECT'):

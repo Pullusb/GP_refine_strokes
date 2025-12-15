@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (2, 0, 0),
+"version": (2, 1, 0),
 "blender": (4, 3, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -64,7 +64,7 @@ class GPREFINE_OT_straighten_stroke(Operator):
         default=False)
 
     def execute(self, context):
-        pref = context.scene.gprsettings
+        gpr = context.scene.gprsettings
         L, F, S = get_context_scope(context)
 
         for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
@@ -115,7 +115,7 @@ class GPREFINE_OT_to_circle_shape(Operator):
 
     def execute(self, context):
         #base on layer/frame/strokes filters -> filter point inside operator
-        pref = context.scene.gprsettings
+        gpr = context.scene.gprsettings
         L, F, S = get_context_scope(context)
 
         if self.individual_strokes or context.mode == 'PAINT_GREASE_PENCIL':#all strokes individually
@@ -220,92 +220,105 @@ class GPREFINE_OT_refine_ops(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        pref = context.scene.gprsettings
+        gpr = context.scene.gprsettings
         L, F, S = get_context_scope(context)
 
         err = None
         ## thinning
         if self.action == "THIN_RELATIVE":
-            thin_stroke_tips_percentage(tip_len=pref.percentage_tip_len, 
-                                        variance=pref.percentage_tip_len_random, 
+            thin_stroke_tips_percentage(tip_len=gpr.percentage_tip_len, 
+                                        variance=gpr.percentage_tip_len_random, 
                                         t_layer=L, t_frame=F, t_stroke=S)
         
         ## -- radius and opacity action
         # if self.action == "ADD_LINE_WIDTH":
-        #     gp_add_line_attr('line_width', amount=pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+        #     gp_add_line_attr('line_width', amount=gpr.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
         
         # if self.action == "SUB_LINE_WIDTH":
-        #     gp_add_line_attr('line_width', amount= -pref.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
+        #     gp_add_line_attr('line_width', amount= -gpr.add_line_width, t_layer=L, t_frame=F, t_stroke=S)
 
         # if self.action == "SET_LINE_WIDTH":
-        #     gp_set_line_attr('line_width', amount=pref.set_line_width, t_layer=L, t_frame=F, t_stroke=S) 
+        #     gp_set_line_attr('line_width', amount=gpr.set_line_width, t_layer=L, t_frame=F, t_stroke=S) 
 
         # if self.action == "MULT_LINE_WIDTH":
-        #     gp_mult_line_attr('line_width', amount=pref.mult_line_width, t_layer=L, t_frame=F, t_stroke=S) 
+        #     gp_mult_line_attr('line_width', amount=gpr.mult_line_width, t_layer=L, t_frame=F, t_stroke=S) 
 
         if self.action == "ADD_LINE_SOFTNESS":
-            gp_add_line_attr('softness', amount=pref.add_softness, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_line_attr('softness', amount=gpr.add_softness, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SUB_LINE_SOFTNESS":
-            gp_add_line_attr('softness', amount= -pref.add_softness, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_line_attr('softness', amount= -gpr.add_softness, t_layer=L, t_frame=F, t_stroke=S)
 
         if self.action == "SET_LINE_SOFTNESS":
-            gp_set_line_attr('softness', amount=pref.set_softness, t_layer=L, t_frame=F, t_stroke=S)
+            gp_set_line_attr('softness', amount=gpr.set_softness, t_layer=L, t_frame=F, t_stroke=S)
 
         if self.action == "MULT_LINE_SOFTNESS":
-            gp_mult_line_attr('softness', amount=pref.mult_line_softness, t_layer=L, t_frame=F, t_stroke=S)
+            gp_mult_line_attr('softness', amount=gpr.mult_line_softness, t_layer=L, t_frame=F, t_stroke=S)
 
         ## -- Points
 
         if self.action == "ADD_RADIUS":
-            gp_add_attr('radius', amount=pref.add_radius, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('radius', amount=gpr.add_radius, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SUB_RADIUS":
-            gp_add_attr('radius', amount= -pref.add_radius, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('radius', amount= -gpr.add_radius, t_layer=L, t_frame=F, t_stroke=S)
 
         if self.action == "SET_RADIUS":
-            gp_set_attr('radius', amount=pref.set_radius, t_layer=L, t_frame=F, t_stroke=S)
+            gp_set_attr('radius', amount=gpr.set_radius, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "MULT_RADIUS":
-            gp_mult_attr('radius', amount=pref.mult_radius, t_layer=L, t_frame=F, t_stroke=S)
+            gp_mult_attr('radius', amount=gpr.mult_radius, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "ADD_OPACITY":
-            gp_add_attr('opacity', amount=pref.add_opacity, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('opacity', amount=gpr.add_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SUB_OPACITY":
-            gp_add_attr('opacity', amount= -pref.add_opacity, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_attr('opacity', amount= -gpr.add_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "SET_OPACITY":
-            gp_set_attr('opacity', amount=pref.set_opacity, t_layer=L, t_frame=F, t_stroke=S)
+            gp_set_attr('opacity', amount=gpr.set_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "MULT_OPACITY":
-            gp_mult_attr('opacity', amount=pref.mult_opacity, t_layer=L, t_frame=F, t_stroke=S)
+            gp_mult_attr('opacity', amount=gpr.mult_opacity, t_layer=L, t_frame=F, t_stroke=S)
         
         # - vertex color
         if self.action == "SET_ALPHA":
-            gp_set_vg_alpha(amount=pref.set_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_set_vg_alpha(amount=gpr.set_alpha, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "ADD_ALPHA":
-            gp_add_vg_alpha(amount=pref.add_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_vg_alpha(amount=gpr.add_alpha, t_layer=L, t_frame=F, t_stroke=S)
     
         if self.action == "SUB_ALPHA":
-            gp_add_vg_alpha(amount= -pref.add_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_vg_alpha(amount= -gpr.add_alpha, t_layer=L, t_frame=F, t_stroke=S)
         
         if self.action == "MULT_ALPHA":
-            gp_mult_vg_alpha(amount= pref.mult_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_mult_vg_alpha(amount= gpr.mult_alpha, t_layer=L, t_frame=F, t_stroke=S)
+
+        # Stroke fill opacity
+        if self.action == "SET_FILL_OPACITY":
+            gp_set_stroke_fill_opacity(amount=gpr.set_fill_opacity, t_layer=L, t_frame=F, t_stroke=S)
+
+        if self.action == "ADD_FILL_OPACITY":
+            gp_add_stroke_fill_opacity(amount=gpr.add_fill_opacity, t_layer=L, t_frame=F, t_stroke=S)
+    
+        if self.action == "SUB_FILL_OPACITY":
+            gp_add_stroke_fill_opacity(amount= -gpr.add_fill_opacity, t_layer=L, t_frame=F, t_stroke=S)
+
+        if self.action == "MULT_FILL_OPACITY":
+            gp_mult_stroke_fill_opacity(amount= gpr.mult_fill_opacity, t_layer=L, t_frame=F, t_stroke=S)
 
         # stroke color fill
         if self.action == "SET_FILL_ALPHA":
-            gp_set_stroke_vg_col_fill_alpha(amount=pref.set_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_set_stroke_vg_col_fill_alpha(amount=gpr.set_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
 
         if self.action == "ADD_FILL_ALPHA":
-            gp_add_stroke_vg_col_fill_alpha(amount=pref.add_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_stroke_vg_col_fill_alpha(amount=gpr.add_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
     
         if self.action == "SUB_FILL_ALPHA":
-            gp_add_stroke_vg_col_fill_alpha(amount= -pref.add_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_add_stroke_vg_col_fill_alpha(amount= -gpr.add_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
 
         if self.action == "MULT_FILL_ALPHA":
-            gp_mult_stroke_vg_col_fill_alpha(amount= pref.mult_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
+            gp_mult_stroke_vg_col_fill_alpha(amount= gpr.mult_fill_alpha, t_layer=L, t_frame=F, t_stroke=S)
 
         ## -- Last stroke modifications
 
@@ -319,15 +332,15 @@ class GPREFINE_OT_refine_ops(Operator):
 
         if self.action == "GUESS_JOIN":
             err = guess_join(same_material=True,
-                             proximity_tolerance=pref.proximity_tolerance,
-                             start_point_tolerance=pref.start_point_tolerance)
+                             proximity_tolerance=gpr.proximity_tolerance,
+                             start_point_tolerance=gpr.start_point_tolerance)
 
         if self.action == "STRAIGHT_2_POINTS":
             for s in strokelist(t_layer=L, t_frame=F, t_stroke=S):
                 to_straight_line(s, keep_points=False, straight_radius=True)
         
         # if self.action == "POLYGONIZE":# own operator for redo panel
-        #     gp_polygonize(pref.poly_angle_tolerance)
+        #     gp_polygonize(gpr.poly_angle_tolerance)
 
         ## -- Infos
         if self.action == "INSPECT_STROKES":
@@ -497,7 +510,7 @@ class GPR_refine_prop(PropertyGroup):
         description="Multiply vertex color alpha (point color opacity)", 
         default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
 
-    # fill alpha (stroke fill color opacity)
+    # fill alpha (stroke fill color alpha channel)
     set_fill_alpha : FloatProperty(name="Fill Alpha",
         description="Vertex fill color alpha to set (stroke color opacity)", options={'HIDDEN'}, 
         default=0.0, min=0, max=1.0, step=3, precision=2)
@@ -508,6 +521,19 @@ class GPR_refine_prop(PropertyGroup):
 
     mult_fill_alpha : FloatProperty(name="Fill Alpha",
         description="Multiply Vertex fill color alpha (stroke color opacity)", 
+        default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
+
+    # Fill opacity
+    set_fill_opacity : FloatProperty(name="Fill Opacity",
+        description="Vertex fill color opacity to set (stroke color opacity)", options={'HIDDEN'}, 
+        default=1.0, min=0, max=1.0, step=3, precision=2)
+
+    add_fill_opacity : FloatProperty(name="Fill Opacity",
+        description="Vertex fill color opacity to add (stroke color opacity)", options={'HIDDEN'}, 
+        default=0.1, min=0, max=1.0, soft_min=0, soft_max=1.0, step=3, precision=2)
+
+    mult_fill_opacity : FloatProperty(name="Fill Opacity",
+        description="Multiply Vertex fill color opacity (stroke color opacity)", 
         default=0.9, min=0, max=4.0, soft_max=2.0, precision=2, options={'HIDDEN'})
 
     # auto join
