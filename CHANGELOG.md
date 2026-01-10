@@ -1,5 +1,13 @@
 # Changelog
 
+2.1.1 - 2026-01-10
+
+- added: option to change the minimum thickness in experimental tool `Tip thinner`
+
+2.1.0 - 2025-12-15
+
+- added: Fill alpha subpanel to affect separately fill_color's alpha and fill opacity
+
 2.0.0 - 2024-11-09
 
 - changed: Addon is fully converted to GPv3 for blender 4.3+ (breaking retro-compatibility) :

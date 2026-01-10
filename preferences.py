@@ -35,7 +35,7 @@ class GPR_addonprefs(bpy.types.AddonPreferences):
     
     experimental : bpy.props.BoolProperty(name='Enable Experimental Features',
         description='Enable experimental features. Unstable or beta',
-        default=False, update=update_ui)
+        default=True, update=update_ui)
 
     def draw(self, context):
         layout = self.layout

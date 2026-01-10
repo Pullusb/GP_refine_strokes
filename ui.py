@@ -341,6 +341,7 @@ class GPREFINE_PT_thin_tips(GPR_refine, Panel):
         else:
             col.prop(context.scene.gprsettings, 'percentage_start_tip_len')
             col.prop(context.scene.gprsettings, 'percentage_end_tip_len')
+        col.prop(context.scene.gprsettings, 'tip_thickness')
         col.prop(context.scene.gprsettings, 'force_max_radius_line_body')
         col.operator('gp.refine_strokes', text='Full And Thin Strokes').action = 'THIN_RELATIVE'
         # layout.label(text="Those settings only affect additive or eraser mode")

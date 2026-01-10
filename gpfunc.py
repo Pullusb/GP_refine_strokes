@@ -287,7 +287,7 @@ def get_tip_from_percentage(s, tip_len=20, variance=0):
     print(f'zone: {thin_range}/{p_num}')#Dbg
     return thin_range
 
-def reshape_rel_thinner_tip_percentage(s, tip_len=10, variance=0):
+def reshape_rel_thinner_tip_percentage(s, tip_len=10, variance=0, tip_thickness=0.001):
     '''
     Make points's radius of strokes thinner by a point number percentage value (on total)
     value is a percentage (of half a line min 10 percent, max 100)
@@ -308,8 +308,8 @@ def reshape_rel_thinner_tip_percentage(s, tip_len=10, variance=0):
     for i in range(thin_range):
         # print(i, 'start ->', transfer_value(i, 0, thin_range, 0.1, start_max) )
         # print(i, 'end ->', transfer_value(i, 0, thin_range, 0.1, end_max) )
-        s.points[i].radius = transfer_value(i, 0, thin_range, 0.1, start_max)
-        s.points[-(i+1)].radius = transfer_value(i, 0, thin_range, 0.1, end_max)
+        s.points[i].radius = transfer_value(i, 0, thin_range, tip_thickness, start_max)
+        s.points[-(i+1)].radius = transfer_value(i, 0, thin_range, tip_thickness, end_max)
 
     #average value ?
     """ # get radius of average max...
@@ -405,10 +405,10 @@ def thin_stroke_tips(tip_len=5, middle=0, t_layer='ACTIVE', t_frame='ACTIVE', t_
             for s in get_strokes(f, target=t_stroke):
                 abs_thinner_tip(s, tip_len=5, middle=0)
 
-def thin_stroke_tips_percentage(tip_len=30, variance=0, t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
+def thin_stroke_tips_percentage(tip_len=30, variance=0, tip_thickness=0.001, t_layer='ALL', t_frame='ACTIVE', t_stroke='SELECT'):
     '''Thin tips of strokes on target layers/frames/strokes defaut (active layer > active frame > selected strokes)'''
     for s in strokelist(t_layer=t_layer, t_frame=t_frame, t_stroke=t_stroke):
-        reshape_rel_thinner_tip_percentage(s, tip_len=tip_len, variance=variance)
+        reshape_rel_thinner_tip_percentage(s, tip_len=tip_len, variance=variance, tip_thickness=tip_thickness)
 
 ## -- Trim / Progressive erase
 

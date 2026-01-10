@@ -2,7 +2,7 @@ bl_info = {
 "name": "Gpencil refine strokes",
 "description": "Bunch of functions for post drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (2, 1, 0),
+"version": (2, 1, 1),
 "blender": (4, 3, 0),
 "location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
 "warning": "",
@@ -227,7 +227,8 @@ class GPREFINE_OT_refine_ops(Operator):
         ## thinning
         if self.action == "THIN_RELATIVE":
             thin_stroke_tips_percentage(tip_len=gpr.percentage_tip_len, 
-                                        variance=gpr.percentage_tip_len_random, 
+                                        variance=gpr.percentage_tip_len_random,
+                                        tip_thickness=gpr.tip_thickness,
                                         t_layer=L, t_frame=F, t_stroke=S)
         
         ## -- radius and opacity action
@@ -435,6 +436,15 @@ class GPR_refine_prop(PropertyGroup):
         description="On the parts that are not fading, set radius to maximum level of the line\
             \nFade from this value on tips", 
         default=False, options={'HIDDEN'},)
+    
+    tip_thickness : FloatProperty(
+        name="Tip Thickness", default=0.001,
+        description="Minimum thickness at the tip of the stroke",
+        min=0.0, #max=10.0, soft_min=0.0, soft_max=1.0,
+        precision=4, # show 4 decimal places
+        step=0.01,
+        options={'HIDDEN'},
+    )
 
     ### Line and points attributes
 
