@@ -16,11 +16,28 @@ class GPR_refine:
 
 class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
     bl_label = "Strokes Refine"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+
+class GPREFINE_PT_targets(GPR_refine, Panel):
+    bl_label = "Targets"
+    bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    # def draw_header(self, context):
+    #     layout = self.layout
+    #     layout.prop(context.scene.gprsettings, 'use_select', text='')
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True # send properties to the right side
 
+        col_pref = layout.column()
+        col_pref.prop(context.scene.gprsettings, 'use_context')
+        col_pref.prop(context.scene.gprsettings, 'use_select')
+        
         col_filter = layout.column()
         col_filter.prop(context.scene.gprsettings, 'layer_tgt')
         col_filter.prop(context.scene.gprsettings, 'frame_tgt')
@@ -28,17 +45,11 @@ class GPREFINE_PT_stroke_refine_panel(GPR_refine, Panel):
         
         col_filter.active = not (context.scene.gprsettings.use_select or (context.scene.gprsettings.use_context and context.mode == 'PAINT_GREASE_PENCIL'))
 
-        col_pref = layout.column()
-        col_pref.prop(context.scene.gprsettings, 'use_context')
-        col_pref.prop(context.scene.gprsettings, 'use_select')
-        
-        #-# Updater
-
 
 class GPREFINE_PT_Selector(GPR_refine, Panel):
     bl_label = "Selections"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -72,7 +83,7 @@ class GPREFINE_PT_Selector(GPR_refine, Panel):
 class GPREFINE_PT_thickness_opacity(GPR_refine, Panel):
     bl_label = "Thickness And Opacity"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -257,7 +268,7 @@ class GPREFINE_PT_stroke_fill_opacity(GPR_refine, Panel):
 class GPREFINE_PT_stroke_shape_refine(GPR_refine, Panel):
     bl_label = "Stroke Reshape"#"Strokes filters"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
-    # bl_options = {'DEFAULT_CLOSED'}
+    bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
@@ -307,8 +318,8 @@ class GPREFINE_PT_resampling(GPR_refine, Panel):
         layout.operator('grease_pencil.stroke_simplify').factor = 0.002
         layout.operator('grease_pencil.stroke_subdivide')
 
-class GPREFINE_PT_analize_gp(GPR_refine, Panel):
-    bl_label = "Infos"#"Strokes filters"
+class GPREFINE_PT_inspect_gp(GPR_refine, Panel):
+    bl_label = "Inspect"
     bl_parent_id = "GPREFINE_PT_stroke_refine_panel"
     bl_options = {'DEFAULT_CLOSED'}
 
@@ -364,6 +375,7 @@ class GPREFINE_PT_auto_join(GPR_refine, Panel):
 
 classes = (
 GPREFINE_PT_stroke_refine_panel,
+GPREFINE_PT_targets,
 GPREFINE_PT_Selector,
 GPREFINE_PT_stroke_shape_refine,
 
@@ -377,7 +389,7 @@ GPREFINE_PT_stroke_fill_opacity,
 GPREFINE_PT_line_softness,
 
 GPREFINE_PT_resampling,
-GPREFINE_PT_analize_gp,
+GPREFINE_PT_inspect_gp,
 )
 
 experimental = (
