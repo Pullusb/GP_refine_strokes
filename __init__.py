@@ -1,10 +1,10 @@
 bl_info = {
-"name": "Gpencil refine strokes",
-"description": "Bunch of functions for post drawing strokes refining",
+"name": "Gpencil Refine Strokes",
+"description": "Bunch of tools for post-drawing strokes refining",
 "author": "Samuel Bernou",
-"version": (2, 1, 1),
+"version": (2, 2, 0),
 "blender": (4, 3, 0),
-"location": "3D view > sidebar 'N' > Gpencil > Strokes refine",
+"location": "3D view > sidebar 'N' > Gpencil > Strokes Refine",
 "warning": "",
 "doc_url": "https://github.com/Pullusb/GP_refine_strokes",
 "tracker_url": "https://github.com/Pullusb/GP_refine_strokes/issues",
@@ -49,8 +49,8 @@ class GPREFINE_OT_straighten_stroke(Operator):
     bl_idname = "gp.straighten_stroke"
     bl_label = "Straight stroke"
     bl_description = "Make stroke a straight line between first and last point, tweak influence in the redo panel\
-        \nshift+click to reset infuence to 100%\
-        \nctrl+click for equalize thickness"#base on layer/frame/strokes filters
+        \nShift + click to reset infuence to 100%\
+        \nCtrl + click for equalize thickness" # base on layer/frame/strokes filters
     bl_options = {"REGISTER", "UNDO"}
 
 
@@ -400,15 +400,13 @@ class GPR_refine_prop(PropertyGroup):
             )
         )
 
-    use_context : BoolProperty(name="Use last in paint mode", options={'HIDDEN'},
-        description="Change target according to context.\
-            \nIn paint mode target last stroke only, (force 'ACTIVE', 'ACTIVE', 'LAST')", 
-        default=True)
-    
-    use_select : BoolProperty(name="Use Selection", options={'HIDDEN'},
-        description="Use only context selection as target in edit and sculpt mode\
-            \n(force 'ALL', 'ACTIVE', 'SELECT')", 
-        default=True)
+    use_custom_targets : BoolProperty(name="Custom Targets", options={'HIDDEN'},
+        description="Use custom filter for affected stroke\
+            \nWhen turned off, edit/sculpt mode use current selection Paint mode use last stroke and", 
+        default=False)
+    # Auto Targets
+    # Paint (force 'ACTIVE', 'ACTIVE', 'LAST')
+    # Selection(force 'ALL', 'ACTIVE', 'SELECT')
     
     ## Tip thinner
     percentage_use_sync_tip_len : BoolProperty(name="Sync tip fade", options={'HIDDEN'},

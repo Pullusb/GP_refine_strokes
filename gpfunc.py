@@ -13,17 +13,21 @@ def get_context_scope(context=None):
         context = bpy.context
     pref = context.scene.gprsettings
     L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-    if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
-        L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+    if pref.use_custom_targets:
+        return L, F, S
 
-    if context.mode != 'PAINT_GREASE_PENCIL' and pref.use_select:
+    if context.mode == 'PAINT_GREASE_PENCIL':
+        # last stroke in paint mode
+        L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+    else:
+        # edit/sculpt/object mode use selection
         L, F, S = 'ALL', 'ACTIVE', 'SELECT'
         ob = context.object
         if ob and ob.type == 'GREASEPENCIL':
             if context.scene.tool_settings.use_grease_pencil_multi_frame_editing:
-                # consider multiframe scope
+                # Consider multiframe scope
                 L, F, S = 'ALL', 'SELECT', 'SELECT'
-    
+
     return L, F, S
 
 def get_layers(target='SELECT'):
@@ -414,11 +418,34 @@ def thin_stroke_tips_percentage(tip_len=30, variance=0, tip_thickness=0.001, t_l
 
 def trim_tip_point(context, endpoint=True):
     '''endpoint : delete last point, else first point'''
+    # FIXME : work well only on paint mode
     pref = context.scene.gprsettings
 
+    if pref.use_custom_targets:
+        L, F, S = get_tgts(context)
+        ### Filters
+        for l in get_layers(target=L):
+            for f in get_frames(l, target=F):
+                for s in get_strokes(f, target=S):
+                    ## TODO: need stroke index for GPv3
+                    if len(s.points) > 2:# erase point
+                        if endpoint:
+                            s.remove_points(1)
+                            # s.points.pop(index=-1)# pop last default
+
+                        # else:
+                        #     pass
+                        #     s.points.pop(index=0)
+                    
+                    ## FIXME: store stroke to remove and trim all at once
+                    # else:# erase line
+                    #     for i in range( len(s.points) ):
+                    #         s.points.pop()
+                    #     f.drawing.strokes.remove(s)
+
     ### Last
-    # can just filter by task
-    if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
+    # Can just filter by task
+    if context.mode == 'PAINT_GREASE_PENCIL':
         layer = bpy.context.object.data.layers.active
         if not layer or not layer.current_frame() or not len(layer.current_frame().drawing.strokes):
             return
@@ -436,32 +463,11 @@ def trim_tip_point(context, endpoint=True):
 
         else:
             # erase line
-            print('om')
             drawing = layer.current_frame().drawing
             last_index = len(drawing.strokes) - 1
             drawing.remove_strokes(indices=[last_index])
         return
 
-    L, F, S = get_tgts(context)
-    ### Filters
-    for l in get_layers(target=L):
-        for f in get_frames(l, target=F):
-            for s in get_strokes(f, target=S):
-                ## TODO: need stroke index for GPv3
-                if len(s.points) > 2:# erase point
-                    if endpoint:
-                        s.remove_points(1)
-                        # s.points.pop(index=-1)# pop last default
-
-                    # else:
-                    #     pass
-                    #     s.points.pop(index=0)
-                
-                ## FIXME: store stroke to remove and trim all at once
-                # else:# erase line
-                #     for i in range( len(s.points) ):
-                #         s.points.pop()
-                #     f.drawing.strokes.remove(s)
 
 #TODO - preserve tip triming (option or another func), (need a "detect fade" function to give at with index the point really start to fade and offset that) 
 

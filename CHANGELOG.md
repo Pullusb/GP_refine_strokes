@@ -1,5 +1,11 @@
 # Changelog
 
+2.2.0 - 2026-02-01
+
+- changed: replaced `Use selection` and `Use last in paint mode` by a single `Target Filter` checkbox to enable the triple filter
+- changed: More compact UI. Target scope is now part of a sub-panel, all panel and subpanels are closed by default
+
+
 2.1.1 - 2026-01-10
 
 - added: option to change the minimum thickness in experimental tool `Tip thinner`

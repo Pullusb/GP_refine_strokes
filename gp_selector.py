@@ -42,8 +42,8 @@ class GPREFINE_OT_select_by_angle(Operator):
         return context.object and context.mode in ('EDIT_GREASE_PENCIL', 'SCULPT_GREASE_PENCIL')
  
     def execute(self, context):
-        if context.mode == 'PAINT_GREASE_PENCIL':# and pref.use_context:
-            return {"CANCELLED"}#disable this one in Paint context
+        # if context.mode == 'PAINT_GREASE_PENCIL': # should not be reachable
+        #     return {"CANCELLED"} # disable this one in Paint context
 
         if self.reduce:
             gpfunc.gp_select_by_angle_reducted(self.angle_tolerance, invert=self.invert)
@@ -227,9 +227,8 @@ class GPREFINE_OT_hatching_selector(Operator):
 
     def execute(self, context):
         pref = context.scene.gprsettings
-        L, F, S = pref.layer_tgt, pref.frame_tgt, 'ALL'#pref.stroke_tgt
-        # if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
-        #     L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+        # stroke_tgt = pref.stroke_tgt if pref.use_custom_targets else 'ALL' # use full stroke target filter ?
+        L, F, S = pref.layer_tgt, pref.frame_tgt, 'ALL'
 
         for s in gpfunc.strokelist(t_layer=L, t_frame=F, t_stroke=S):
             select_if_aligned_to_angle(s, self.ref_angle, self.tolerance, self.non_straight_tol)
@@ -253,12 +252,10 @@ class GPREFINE_OT_set_angle_from_stroke(Operator):
     @classmethod
     def poll(cls, context):
         return context.object and context.mode in ('EDIT_GREASE_PENCIL', 'SCULPT_GREASE_PENCIL')
+
     def execute(self, context):
         obj = context.object
-        pref = context.scene.gprsettings
-        L, F, S = pref.layer_tgt, pref.frame_tgt, pref.stroke_tgt
-        if context.mode == 'PAINT_GREASE_PENCIL' and pref.use_context:
-            L, F, S = 'ACTIVE', 'ACTIVE', 'LAST'
+        L, F, S = gpfunc.get_context_scope(context)
 
         ## use last selected stroke
         slist = [s for s in gpfunc.strokelist(t_layer=L, t_frame=F, t_stroke=S) if s.select]
