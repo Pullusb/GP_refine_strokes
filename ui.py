@@ -35,9 +35,9 @@ class GPREFINE_PT_target_filter(GPR_refine, Panel):
         layout.use_property_split = True # send properties to the right side
         
         col_filter = layout.column()
-        col_filter.prop(context.scene.gprsettings, 'layer_tgt', text="Layer")
-        col_filter.prop(context.scene.gprsettings, 'frame_tgt', text="Frame")
-        col_filter.prop(context.scene.gprsettings, 'stroke_tgt', text="Stroke")
+        col_filter.prop(context.scene.gprsettings, 'layer_tgt', text="Layers")
+        col_filter.prop(context.scene.gprsettings, 'frame_tgt', text="Frames")
+        col_filter.prop(context.scene.gprsettings, 'stroke_tgt', text="Strokes")
         
         col_filter.active = context.scene.gprsettings.use_custom_targets
 
